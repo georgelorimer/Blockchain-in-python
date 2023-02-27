@@ -4,6 +4,7 @@ import sys
 import time
 
 from Crypto.PublicKey import ECC
+from Crypto.Signature import eddsa
 
 from Transaction import *
 from Transaction_Collections import *
@@ -20,9 +21,9 @@ class Node:
         self.transaction_messages = []
         self.peer_ports = []
         self.peer_dict = {}
-        self.transaction_pool = Transaction_Pool()
 
         self.generate_keys()
+        self.transaction_pool = Transaction_Pool(self.pub_key_str)
 
         # Connects to Genesis Peer
         if connection is not None:
@@ -96,20 +97,71 @@ class Node:
 
     def menu(self):
         while True:
-            choice = input('Type "T" to create a transaction: ')
+            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key: ')
             if choice == "T":
+                counter = 1
+                print("Unspent Transactions:")
+                for transaction in self.transaction_pool.transactions_unspent.my_unspent:
+                    print(counter, '.\t', transaction.to_json_complete())
+                    counter += 1
+                transaction_choice = int(input('Choose your transaction to spend: '))
+                transaction_to_spend = self.transaction_pool.transactions_unspent.my_unspent[transaction_choice - 1]
+
                 ############# ADD VALIDATION ##############
-                transaction_hash = input('transaction_hash: ')
-                output_id = input('output_id: ')
-                script_sig = input('script_sig: ')
-                script_pub_key = input('script_pub_key: ')
-                value = input('value: ')
+                # inputs
+                transaction_hash = transaction_to_spend.hash
+                output_id = 0 # <------ FOR NOW
+                signer = eddsa.new(self.private_key, 'rfc8032')
+                script_sig = signer.sign(str(transaction_to_spend.to_json_complete()).encode('utf-8'))
+
+                #outputs
+                script_pub_key = input('Enter the public key of the desired recipient: ')
+                value = int(input("Ammount to send: "))
+
+
                 t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now())
                 self.transaction_pool.add(t)
                 print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
                 self.send_message(prefixed_message)
+
+                if transaction_to_spend.outputs[0].value > value: #-----> change [0]
+                    remaining = transaction_to_spend.outputs[0].value - value#-----> change [0]
+                    t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now())
+                    self.transaction_pool.add(t)
+                    print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
+                    prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                    self.transaction_messages.append(prefixed_message)
+                    self.send_message(prefixed_message)
+
+
+                self.transaction_pool.transactions_unspent.spent(transaction_to_spend)
+            
+
+            elif choice == 'G':
+                pub_key_str= str(self.public_key.pointQ.x) + '+' + str(self.public_key.pointQ.y)
+                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 0, 'None')], [Transaction_Output(self.pub_key_str, 100)], datetime.now())
+                self.transaction_pool.add(t)
+                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                self.transaction_messages.append(prefixed_message)
+                self.send_message(prefixed_message)
+
+            
+            elif choice == "A":
+                print('Balance is:', self.transaction_pool.transactions_unspent.utxo)
+            
+            elif choice == "U":
+                counter = 1
+                print("Unspent Transactions:")
+                for transaction in self.transaction_pool.transactions_unspent.my_unspent:
+                    print(counter, '.\t', transaction.to_json_complete())
+                    counter += 1
+
+            elif choice == "K":
+                print('Your public key is:', self.pub_key_str)
+
+
     #### UTILITY FUNCTIONS ####
 
     def connect_to_peer(self, peer_port):
@@ -156,6 +208,7 @@ class Node:
         # Look in 3_2.py for exporting key as pem
         self.private_key = ECC.generate(curve='ed25519')
         self.public_key = self.private_key.public_key()
+        self.pub_key_str = str(self.public_key.pointQ.x) + '+' + str(self.public_key.pointQ.y)
 
 
 if (len(sys.argv)) == 2:

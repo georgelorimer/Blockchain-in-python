@@ -56,7 +56,6 @@ class Transaction:
     def to_json_contents(self):
         """ Returns a JSON-serializable representation of this object. """
         val = {}
-        # val['hash'] = self.get_hash()
         val['inputs'] = []
         for inp in self.inputs:
             val['inputs'].append(inp.to_json_compatible())
@@ -87,3 +86,8 @@ class Transaction:
             outputs.append(Transaction_Output.from_json_compatible(out))
         timestamp = datetime.strptime(content['timestamp'], "%Y-%m-%dT%H:%M:%S.%f UTC")
         return cls(hashp, inputs, outputs, timestamp)
+
+    def verify(self):
+        # Signing
+        # ammounts
+        
