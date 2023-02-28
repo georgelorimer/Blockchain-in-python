@@ -70,7 +70,19 @@ class Node:
                     # This is where I will call the functions to make a transaction from message
                     transaction_dict = eval(str_array[1])
                     transaction = Transaction.from_json_compatible(transaction_dict)
+                    ######################################## VERIFY #####################################
+
+                    input_hash = transaction.inputs[0].transaction_hash
+                    for t in self.transaction_pool.transactions_unspent.unspent:
+                        if t.get_hash() == input_hash:
+                            input_transaction = t
+                            break
+                    if transaction.inputs[0].transaction_hash != "GENERATED_HASH":
+                        transaction.verify(input_transaction)
                     self.transaction_pool.add(transaction)
+                    if transaction.inputs[0].transaction_hash != "GENERATED_HASH":
+                        self.transaction_pool.transactions_unspent.spent(input_transaction)
+
 
                     print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
 
@@ -118,25 +130,31 @@ class Node:
                 script_pub_key = input('Enter the public key of the desired recipient: ')
                 value = int(input("Ammount to send: "))
 
-
-                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now())
-                self.transaction_pool.add(t)
-                print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
-                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                self.transaction_messages.append(prefixed_message)
-                self.send_message(prefixed_message)
-
-                if transaction_to_spend.outputs[0].value > value: #-----> change [0]
-                    remaining = transaction_to_spend.outputs[0].value - value#-----> change [0]
-                    t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now())
+                try:
+                    t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now())
+                    ######################################## VERIFY #####################################
+                    t.verify(transaction_to_spend)
                     self.transaction_pool.add(t)
                     print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
                     prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                     self.transaction_messages.append(prefixed_message)
                     self.send_message(prefixed_message)
+                    self.transaction_pool.transactions_unspent.spent(transaction_to_spend)
+                except:
+                    print('Invalid transaction')
 
-
-                self.transaction_pool.transactions_unspent.spent(transaction_to_spend)
+                if transaction_to_spend.outputs[0].value > value: #-----> change [0]
+                    remaining = transaction_to_spend.outputs[0].value - value#-----> change [0]
+                    try:
+                        t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now())
+                        t.verify(transaction_to_spend)
+                        self.transaction_pool.add(t)
+                        print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
+                        prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                        self.transaction_messages.append(prefixed_message)
+                        self.send_message(prefixed_message)
+                    except:
+                        print('Invalid Transactions')
             
 
             elif choice == 'G':

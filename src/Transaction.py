@@ -4,6 +4,9 @@ from datetime import datetime
 from collections import namedtuple
 from hashlib import sha256
 
+from Crypto.PublicKey import ECC
+from Crypto.Signature import eddsa
+
 
 class Transaction_Input(namedtuple("Transaction_Input", ["transaction_hash", "output_id", "script_sig"])):
 
@@ -87,7 +90,24 @@ class Transaction:
         timestamp = datetime.strptime(content['timestamp'], "%Y-%m-%dT%H:%M:%S.%f UTC")
         return cls(hashp, inputs, outputs, timestamp)
 
-    def verify(self):
-        # Signing
-        # ammounts
+    def verify(self, input_transaction):
+
+        # Verify signature
+        input_key = input_transaction.outputs[0].script_pub_key
+        input_key_split = input_key.split('+')
+        pub = ECC.construct(curve='ed25519', point_x = int(input_key_split[0]), point_y = int(input_key_split[1]))
+
+        signature = self.inputs[0].script_sig
+
+        message = str(input_transaction.to_json_complete()).encode('utf-8')
+
+        verifier = eddsa.new(pub, 'rfc8032')
+        try:
+            verifier.verify(message, signature)
+            print("The message is authentic")
+        except ValueError:
+            print("The message is not authentic")
+
+        # ammounts for from transaction
         
+

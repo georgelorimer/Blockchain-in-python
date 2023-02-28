@@ -22,9 +22,13 @@ class Transaction_Unspent:
             print('maybe',self.unspent)
 
     def spent(self, transaction):
-        self.my_unspent.remove(transaction)
-        self.unspent.remove(transaction)
-        self.utxo = self.utxo - transaction.outputs[0].value
+        for unspent in self.unspent:
+            if unspent.to_json_complete == transaction.to_json_complete:
+
+                if transaction in self.my_unspent:
+                    self.my_unspent.remove(transaction)
+                    self.utxo = self.utxo - transaction.outputs[0].value
+                self.unspent.remove(transaction)
     
     # def utxo
         # work out transaction
