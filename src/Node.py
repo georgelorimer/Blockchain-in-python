@@ -8,6 +8,8 @@ from Crypto.Signature import eddsa
 
 from Transaction import *
 from Transaction_Collections import *
+from Block import *
+from Blockchain import *
 
 class Node:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,10 +30,21 @@ class Node:
         # Connects to Genesis Peer
         if connection is not None:
             self.connect_to_peer(int(connection))
+        else:
+            self.blockchain = Blockchain(None)
+
+        # for mining
+        self.mining = False
+        self.block_found = False
+        self.time_for_next_round = None # : datetime of previos block + time for each round e.g. 1 minute
 
         m_thread = threading.Thread(target=self.menu)
         m_thread.daemon = True
         m_thread.start()
+
+        min_thread = threading.Thread(target=self.miner)
+        min_thread.daemon = True
+        min_thread.start()
 
         # MINING THREAD
 
@@ -92,6 +105,30 @@ class Node:
                             peer.send(data)
                         except:
                             pass
+                    
+            elif str_data.startswith("BLOCK"):
+                if str_data not in self.transaction_messages:
+                    str_array = str_data.split(':', 1)
+                    self.transaction_messages.append(str_data)
+
+                    # This is where I will call the functions to make a transaction from message
+                    block_dict = eval(str_array[1])
+                    block = Block.from_json_compatible(block_dict)
+                    ######################################## VERIFY #####################################
+
+                    self.block_found = True
+                    self.blockchain.add(block)
+                    self.transaction_pool.update_from_block(block)
+
+                    self.time_for_next_round = block.time + datetime.timedelta(0, 120)
+
+                    print(data)
+                    for peer in self.peers:
+                        try:
+                            peer.send(data)
+                        except:
+                            pass
+
             
             elif str_data.startswith("PORT"):
                 str_array = str_data.split(':')
@@ -102,14 +139,16 @@ class Node:
                     if int(str_array[1]) != int(str(self.port)):
                         
                         self.connect_to_peer(int(str_array[1]))
-                        time.sleep(1)
+                        time.sleep(0.1)
 
                         for peer in self.peers:
                             peer.send(data)
+                            message = "BLOCKCHAIN:" + self.blockchain.to
+                            peer.send(bytes(message, 'utf-8'))
 
     def menu(self):
         while True:
-            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key: ')
+            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block: ')
             if choice == "T":
                 counter = 1
                 print("Unspent Transactions:")
@@ -178,6 +217,37 @@ class Node:
 
             elif choice == "K":
                 print('Your public key is:', self.pub_key_str)
+
+            elif choice == "M":
+                if self.mining == False:
+                    self.mining = True
+                    print('Mining is turned on')
+                elif self.mining == True:
+                    self.mining == False
+                    print('Mining is turned off')
+            
+            elif choice == "B":
+                b = Block.create(self.transaction_pool, 'None')
+                print(b.to_json_complete())
+
+    def miner(self):
+        while True:
+            if self.miner == True and datetime.now > self.time_for_next_round:
+                b = Block.create(self.transaction_pool, self.prev_block_hash)
+                if self.block_found == False:
+                    # send Block to others
+                    prefixed_message="BLOCK:" + str(b.to_json_complete())
+                    self.transaction_messages.append(prefixed_message)
+                    self.send_message(prefixed_message)
+
+                    self.blockchain.add(b)
+                    self.transaction_pool.update_from_block(b)
+
+                    self.time_for_next_round = b.time + datetime.timedelta(0, 120)
+                    self.prev_block_hash = b.block_hash
+                elif self.block_found == True:
+                    self.block_found = False
+
 
 
     #### UTILITY FUNCTIONS ####

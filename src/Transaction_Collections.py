@@ -29,11 +29,20 @@ class Transaction_Unspent:
                     self.my_unspent.remove(transaction)
                     self.utxo = self.utxo - transaction.outputs[0].value
                 self.unspent.remove(transaction)
+
+    # def update <--- updates from transaction pool adn blockchain
     
     # def utxo
         # work out transaction
         # return self.utxo
 
+    # COME BACK TO THIS
+    # def utxo(self):
+    #     balance = 0
+    #     for transaction in self.my_unspent:
+    #         for output in transaction.outputs:
+    #             if output.script_pub_key == self.pub_key_str:
+    #                 out
 
 
 
@@ -58,7 +67,27 @@ class Transaction_Pool:
             self.transactions_unspent.add_unspent(transaction)
             self.list.append(transaction)
             return True
+    
+    def from_json_transactions(self):
+        transactions = []
+        for transaction in self.list:
+            transactions.append(transaction.to_json_complete())
+        return transactions
+    
+    def update_from_block(self, block):
+        block_transactions = block.to_json_complete()['transactions']
 
+        new_transaction_pool = []
 
-
-# class Transactions_for_Block
+        for pool_transaction in self.list:
+            in_list = False
+            for block_transaction in block_transactions:
+                if block_transaction == pool_transaction.to_json_complete():
+                    in_list = True
+                    break
+            if in_list == False:
+                new_transaction_pool.append(pool_transaction)
+        
+        self.list = new_transaction_pool
+        # self.transactions_unspent.update(block)
+                
