@@ -1,7 +1,10 @@
 import socket
 import threading
 import sys
-import time
+
+import time as tim
+from datetime import timedelta, datetime
+
 
 from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
@@ -30,13 +33,16 @@ class Node:
         # Connects to Genesis Peer
         if connection is not None:
             self.connect_to_peer(int(connection))
+            self.blockchain = None
         else:
             self.blockchain = Blockchain(None)
+            date = self.blockchain.head().time
+            dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+            self.time_for_next_round =  dt + timedelta(0,60)
 
         # for mining
         self.mining = False
-        self.block_found = False
-        self.time_for_next_round = None # : datetime of previos block + time for each round e.g. 1 minute
+        self.block_found = False 
 
         m_thread = threading.Thread(target=self.menu)
         m_thread.daemon = True
@@ -120,7 +126,7 @@ class Node:
                     self.blockchain.add(block)
                     self.transaction_pool.update_from_block(block)
 
-                    self.time_for_next_round = block.time + datetime.timedelta(0, 120)
+                    self.time_for_next_round = block.time + timedelta(0, 60)
 
                     print(data)
                     for peer in self.peers:
@@ -128,7 +134,22 @@ class Node:
                             peer.send(data)
                         except:
                             pass
+            
+            elif str_data.startswith("CHAIN"):
+                if str_data not in self.transaction_messages and self.blockchain == None:
+                    str_array = str_data.split(':', 1)
+                    self.transaction_messages.append(str_data)
 
+                    # This is where I will call the functions to make a transaction from message
+                    blockchain_dict = eval(str_array[1])
+                    print(blockchain_dict)
+                    self.blockchain = Blockchain.from_json_compatible(blockchain_dict)
+                    
+                    date = self.blockchain.head().time
+                    dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+                    self.time_for_next_round =  dt + timedelta(0,60)
+                    print(self.time_for_next_round)
+                    print(self.blockchain.to_json_compatible())
             
             elif str_data.startswith("PORT"):
                 str_array = str_data.split(':')
@@ -139,12 +160,15 @@ class Node:
                     if int(str_array[1]) != int(str(self.port)):
                         
                         self.connect_to_peer(int(str_array[1]))
-                        time.sleep(0.1)
+                        tim.sleep(0.1)
 
                         for peer in self.peers:
                             peer.send(data)
-                            message = "BLOCKCHAIN:" + self.blockchain.to
+                            tim.sleep(0.1)
+                            message = "CHAIN:" + str(self.blockchain.to_json_compatible())
+                            self.transaction_messages.append(message)
                             peer.send(bytes(message, 'utf-8'))
+                            tim.sleep(0.1)
 
     def menu(self):
         while True:
@@ -233,17 +257,18 @@ class Node:
     def miner(self):
         while True:
             if self.miner == True and datetime.now > self.time_for_next_round:
+                print('mining...')
                 b = Block.create(self.transaction_pool, self.prev_block_hash)
                 if self.block_found == False:
                     # send Block to others
-                    prefixed_message="BLOCK:" + str(b.to_json_complete())
+                    prefixed_message="CHAIN:" + str(b.to_json_complete())
                     self.transaction_messages.append(prefixed_message)
                     self.send_message(prefixed_message)
 
                     self.blockchain.add(b)
                     self.transaction_pool.update_from_block(b)
 
-                    self.time_for_next_round = b.time + datetime.timedelta(0, 120)
+                    self.time_for_next_round = b.time + timedelta(0, 60)
                     self.prev_block_hash = b.block_hash
                 elif self.block_found == True:
                     self.block_found = False

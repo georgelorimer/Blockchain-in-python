@@ -1,6 +1,7 @@
 
 from hashlib import sha256
 from datetime import datetime
+from Transaction import *
 
 class Block:
     
@@ -23,13 +24,13 @@ class Block:
         transactions = transaction_pool.from_json_transactions()
 
         hash_of_transaction = sha256(str(transactions).encode('utf-8')).hexdigest()
-        time = datetime.now()
-
+        dtime = datetime.now()
+        time = [dtime.year, dtime.month, dtime.day, dtime.hour, dtime.minute, dtime.second, dtime.microsecond]
         return cls(None, prev_block_hash, hash_of_transaction, time, 0, transactions)
 
     def proof_of_work(self):
         
-        target = 4
+        target = 6
         threshold = "0"*target
 
         found = False
@@ -63,6 +64,7 @@ class Block:
             'transactions': self.block_transactions
         }
 
+    @classmethod
     def from_json_compatible(cls, obj:dict):
         block_hash = obj['hash_pointer']
         header = obj['header']
@@ -70,6 +72,10 @@ class Block:
         hash_of_transaction = header['hash_of_transaction']
         time = header['time']
         nonce = header['nonce']
-        block_transactions = obj['transaction']
+        block_transactions_str = obj['transactions']
+
+        block_transactions = []
+        for transaction in block_transactions_str:
+            block_transactions.append(Transaction.from_json_compatible(transaction))
 
         return cls(block_hash, prev_block_hash, hash_of_transaction, time, nonce, block_transactions)
