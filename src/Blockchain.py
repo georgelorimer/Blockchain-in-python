@@ -18,7 +18,6 @@ class Blockchain:
 
     def add(self, block):
         self.blockchain.append(block)
-        print(self.to_json_compatible())
 
     def head(self):
         return self.blockchain[-1]

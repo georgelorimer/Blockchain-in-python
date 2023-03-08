@@ -70,8 +70,6 @@ class Node:
             
 
             self.peers.append(c)
-            print(self.peers)
-            print(self.peer_ports)
             print(f'Connected to peer at {a[0]}:{a[1]}')
 
 
@@ -102,10 +100,6 @@ class Node:
                     if transaction.inputs[0].transaction_hash != "GENERATED_HASH":
                         self.transaction_pool.transactions_unspent.spent(input_transaction)
 
-
-                    print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
-
-                    print(data)
                     for peer in self.peers:
                         try:
                             peer.send(data)
@@ -113,8 +107,8 @@ class Node:
                             pass
                     
             elif str_data.startswith("BLOCK"):
-                print(data)
                 if str_data not in self.transaction_messages:
+                    self.block_found = True
                     str_array = str_data.split(':', 1)
                     self.transaction_messages.append(str_data)
 
@@ -123,7 +117,6 @@ class Node:
                     block = Block.from_json_compatible(block_dict)
                     ######################################## VERIFY #####################################
 
-                    self.block_found = True
                     self.blockchain.add(block)
                     self.transaction_pool.update_from_block(block)
 
@@ -131,7 +124,6 @@ class Node:
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round = dt + timedelta(0, 60)
 
-                    print(data)
                     for peer in self.peers:
                         try:
                             peer.send(data)
@@ -145,37 +137,34 @@ class Node:
 
                     # This is where I will call the functions to make a transaction from message
                     blockchain_dict = eval(str_array[1])
-                    print(blockchain_dict)
                     self.blockchain = Blockchain.from_json_compatible(blockchain_dict)
                     
                     date = self.blockchain.head().time
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round =  dt + timedelta(0,60)
-                    print(self.time_for_next_round)
-                    print(self.blockchain.to_json_compatible())
             
             elif str_data.startswith("PORT"):
                 str_array = str_data.split(':')
-                print(str_array)
                 if int(str_array[1]) in self.peer_ports:
                     pass
                 else:
                     if int(str_array[1]) != int(str(self.port)):
                         
                         self.connect_to_peer(int(str_array[1]))
-                        tim.sleep(0.1)
+                        tim.sleep(0.2)
 
                         for peer in self.peers:
                             peer.send(data)
-                            tim.sleep(0.1)
-                            message = "CHAIN:" + str(self.blockchain.to_json_compatible())
-                            self.transaction_messages.append(message)
-                            peer.send(bytes(message, 'utf-8'))
-                            tim.sleep(0.1)
+                            tim.sleep(0.3)
+                            if self.blockchain != None:
+                                message = "CHAIN:" + str(self.blockchain.to_json_compatible())
+                                self.transaction_messages.append(message)
+                                peer.send(bytes(message, 'utf-8'))
+                                tim.sleep(0.5)
 
     def menu(self):
         while True:
-            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round: ')
+            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block": ')
             if choice == "T":
                 counter = 1
                 print("Unspent Transactions:")
@@ -260,15 +249,20 @@ class Node:
             
             elif choice == "R":
                 print('Time till next: ', self.time_for_next_round - datetime.now())
+            
+            elif choice == "S":
+                print("\nThis is my Blockchain:\n\n", self.blockchain.to_json_compatible())
+                print("\nThis is the last block:\n\n", self.blockchain.head().to_json_complete())
+
 
     def miner(self):
-        print('Running miner')
         while True:
             
             if self.mining == True and datetime.now() > self.time_for_next_round:
                 print('mining...')
                 b = Block.create(self.transaction_pool, self.blockchain.prev_block_hash())
                 if self.block_found == False:
+                    print("\n\n\n I Won \n\n\n")
                     # send Block to others
                     prefixed_message="BLOCK:" + str(b.to_json_complete())
                     self.transaction_messages.append(prefixed_message)
@@ -281,6 +275,7 @@ class Node:
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round =  dt + timedelta(0,60)
                 elif self.block_found == True:
+                    print("\n\n\n I LOST \n\n\n")
                     self.block_found = False
 
 
@@ -293,7 +288,6 @@ class Node:
         self.peers.append(peer_sock)
         self.peer_ports.append(peer_port)
         self.peer_dict[peer_sock] = peer_port
-        print(self.peer_dict)
         message = "PORT:" + str(self.port)
         peer_sock.send(bytes(message, 'utf-8'))
         print(f'Connected to peer at port {peer_port}')

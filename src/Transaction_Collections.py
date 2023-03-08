@@ -11,15 +11,12 @@ class Transaction_Unspent:
     def add_my_unspent(self, transaction, value):
         if transaction not in self.my_unspent:
             self.my_unspent.append(transaction)
-            print('yes',self.my_unspent)
             self.utxo = self.utxo + value
             print('YOU JUST RECIEVED',value, 'SHMECKLES!!!')
     
     def add_unspent(self, transaction):
         if transaction not in self.unspent:
             self.unspent.append(transaction)
-            print('no',transaction.to_json_complete())
-            print('maybe',self.unspent)
 
     def spent(self, transaction):
         for unspent in self.unspent:
