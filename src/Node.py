@@ -78,7 +78,7 @@ class Node:
     # sets up a new handler for each connection 
     def handler(self, c, a):
         while True:
-            data = c.recv(1024)
+            data = c.recv(4096)
             str_data = data.decode("utf-8")
 
             if str_data.startswith("TRANSACTION"):
@@ -113,6 +113,7 @@ class Node:
                             pass
                     
             elif str_data.startswith("BLOCK"):
+                print(data)
                 if str_data not in self.transaction_messages:
                     str_array = str_data.split(':', 1)
                     self.transaction_messages.append(str_data)
@@ -126,7 +127,9 @@ class Node:
                     self.blockchain.add(block)
                     self.transaction_pool.update_from_block(block)
 
-                    self.time_for_next_round = block.time + timedelta(0, 60)
+                    date = block.time
+                    dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+                    self.time_for_next_round = dt + timedelta(0, 60)
 
                     print(data)
                     for peer in self.peers:
@@ -172,7 +175,7 @@ class Node:
 
     def menu(self):
         while True:
-            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block: ')
+            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round: ')
             if choice == "T":
                 counter = 1
                 print("Unspent Transactions:")
@@ -246,30 +249,37 @@ class Node:
                 if self.mining == False:
                     self.mining = True
                     print('Mining is turned on')
+                    print('Time till next: ', self.time_for_next_round - datetime.now())
                 elif self.mining == True:
-                    self.mining == False
+                    self.mining = False
                     print('Mining is turned off')
             
             elif choice == "B":
                 b = Block.create(self.transaction_pool, 'None')
                 print(b.to_json_complete())
+            
+            elif choice == "R":
+                print('Time till next: ', self.time_for_next_round - datetime.now())
 
     def miner(self):
+        print('Running miner')
         while True:
-            if self.miner == True and datetime.now > self.time_for_next_round:
+            
+            if self.mining == True and datetime.now() > self.time_for_next_round:
                 print('mining...')
-                b = Block.create(self.transaction_pool, self.prev_block_hash)
+                b = Block.create(self.transaction_pool, self.blockchain.prev_block_hash())
                 if self.block_found == False:
                     # send Block to others
-                    prefixed_message="CHAIN:" + str(b.to_json_complete())
+                    prefixed_message="BLOCK:" + str(b.to_json_complete())
                     self.transaction_messages.append(prefixed_message)
                     self.send_message(prefixed_message)
 
                     self.blockchain.add(b)
                     self.transaction_pool.update_from_block(b)
 
-                    self.time_for_next_round = b.time + timedelta(0, 60)
-                    self.prev_block_hash = b.block_hash
+                    date = b.time
+                    dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+                    self.time_for_next_round =  dt + timedelta(0,60)
                 elif self.block_found == True:
                     self.block_found = False
 

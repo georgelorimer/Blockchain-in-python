@@ -18,13 +18,14 @@ class Blockchain:
 
     def add(self, block):
         self.blockchain.append(block)
+        print(self.to_json_compatible())
 
     def head(self):
         return self.blockchain[-1]
 
     def prev_block_hash(self):
         prev_block = self.blockchain[-1]
-        return prev_block['hash_pointer']
+        return prev_block.block_hash
 
     def to_json_compatible(self):
         blockchain = []

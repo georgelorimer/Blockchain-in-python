@@ -30,7 +30,7 @@ class Block:
 
     def proof_of_work(self):
         
-        target = 6
+        target = 5
         threshold = "0"*target
 
         found = False
