@@ -20,8 +20,17 @@ class Block:
 
 
     @classmethod
-    def create(cls, transaction_pool, prev_block_hash):
+    def create(cls, transaction_pool, prev_block_hash, creator):
         transactions = transaction_pool.from_json_transactions()
+
+        fee = 0
+
+        for transaction in transactions:
+            if transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
+                fee += transaction.outputs[0].value
+            
+        t = Transaction(None,[Transaction_Input("COINBASE_TRANSACTION", 0, 'None')], [Transaction_Output(creator, 50+fee)], datetime.now())
+        transactions.insert(0, t)
 
         hash_of_transaction = sha256(str(transactions).encode('utf-8')).hexdigest()
         dtime = datetime.now()
@@ -58,10 +67,13 @@ class Block:
         }
 
     def to_json_complete(self):
+        transactions = []
+        for transaction in self.block_transactions:
+            transactions.append(transaction.to_json_complete())
         return {
             'hash_pointer': self.block_hash,
             'header': self.to_json_header(),
-            'transactions': self.block_transactions
+            'transactions': transactions
         }
 
     @classmethod

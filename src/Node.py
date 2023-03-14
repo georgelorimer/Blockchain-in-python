@@ -5,7 +5,6 @@ import sys
 import time as tim
 from datetime import timedelta, datetime
 
-
 from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
 
@@ -164,7 +163,7 @@ class Node:
 
     def menu(self):
         while True:
-            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block": ')
+            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block: ')
             if choice == "T":
                 counter = 1
                 print("Unspent Transactions:")
@@ -186,34 +185,37 @@ class Node:
                 value = int(input("Ammount to send: "))
 
                 try:
-                    t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now())
+                    transaction_main = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now())
                     ######################################## VERIFY #####################################
-                    t.verify(transaction_to_spend)
-                    self.transaction_pool.add(t)
+                    transaction_main.verify(transaction_to_spend)
+                    self.transaction_pool.add(transaction_main)
                     print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
-                    prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                    prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
                     self.transaction_messages.append(prefixed_message)
                     self.send_message(prefixed_message)
                     self.transaction_pool.transactions_unspent.spent(transaction_to_spend)
                 except:
                     print('Invalid transaction')
 
-                if transaction_to_spend.outputs[0].value > value: #-----> change [0]
-                    remaining = transaction_to_spend.outputs[0].value - value#-----> change [0]
-                    try:
-                        t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now())
-                        t.verify(transaction_to_spend)
-                        self.transaction_pool.add(t)
-                        print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
-                        prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                        self.transaction_messages.append(prefixed_message)
-                        self.send_message(prefixed_message)
-                    except:
-                        print('Invalid Transactions')
-            
+                transaction_fee = int(input("Transaction fee: "))
+                remaining = transaction_to_spend.outputs[0].value - value - transaction_fee
+                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now())
+                t.verify(transaction_to_spend)
+                self.transaction_pool.add(t)
+                print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
+                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                self.transaction_messages.append(prefixed_message)
+                self.send_message(prefixed_message)
+
+                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now())
+                self.transaction_pool.add(t)
+                print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
+                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                self.transaction_messages.append(prefixed_message)
+                self.send_message(prefixed_message)
+        
 
             elif choice == 'G':
-                pub_key_str= str(self.public_key.pointQ.x) + '+' + str(self.public_key.pointQ.y)
                 t = Transaction(None,[Transaction_Input("GENERATED_HASH", 0, 'None')], [Transaction_Output(self.pub_key_str, 100)], datetime.now())
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
@@ -244,7 +246,7 @@ class Node:
                     print('Mining is turned off')
             
             elif choice == "B":
-                b = Block.create(self.transaction_pool, 'None')
+                b = Block.create(self.transaction_pool, 'None', self.pub_key_str)
                 print(b.to_json_complete())
             
             elif choice == "R":
@@ -260,7 +262,7 @@ class Node:
             
             if self.mining == True and datetime.now() > self.time_for_next_round:
                 print('mining...')
-                b = Block.create(self.transaction_pool, self.blockchain.prev_block_hash())
+                b = Block.create(self.transaction_pool, self.blockchain.prev_block_hash(), self.pub_key_str)
                 if self.block_found == False:
                     print("\n\n\n I Won \n\n\n")
                     # send Block to others
