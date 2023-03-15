@@ -1,7 +1,5 @@
 import socket
 import threading
-import sys
-
 import time as tim
 from datetime import timedelta, datetime
 
@@ -34,6 +32,7 @@ class Node:
             self.connect_to_peer(int(connection))
             self.blockchain = None
         else:
+            # Create Blockchain
             self.blockchain = Blockchain(None)
             date = self.blockchain.head().time
             dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
@@ -51,8 +50,6 @@ class Node:
         min_thread.daemon = True
         min_thread.start()
 
-        # MINING THREAD
-
         # start loop for listening to connections
         self.listen()
 
@@ -67,74 +64,66 @@ class Node:
             c_thread.daemon = True
             c_thread.start()
             
-
             self.peers.append(c)
             print(f'Connected to peer at {a[0]}:{a[1]}')
 
-
-    # sets up a new handler for each connection 
+ 
     def handler(self, c, a):
         while True:
-            data = c.recv(4096)
+            # try, except:
+            data = c.recv(65536)
+            
             str_data = data.decode("utf-8")
 
             if str_data.startswith("TRANSACTION"):
+
                 if str_data not in self.transaction_messages:
                     str_array = str_data.split(':', 1)
                     self.transaction_messages.append(str_data)
 
-                    # This is where I will call the functions to make a transaction from message
                     transaction_dict = eval(str_array[1])
                     transaction = Transaction.from_json_compatible(transaction_dict)
-                    ######################################## VERIFY #####################################
 
                     input_hash = transaction.inputs[0].transaction_hash
                     for t in self.transaction_pool.transactions_unspent.unspent:
                         if t.get_hash() == input_hash:
                             input_transaction = t
                             break
-                    if transaction.inputs[0].transaction_hash != "GENERATED_HASH":
-                        transaction.verify(input_transaction)
-                    self.transaction_pool.add(transaction)
-                    if transaction.inputs[0].transaction_hash != "GENERATED_HASH":
-                        self.transaction_pool.transactions_unspent.spent(input_transaction)
-
-                    for peer in self.peers:
-                        try:
-                            peer.send(data)
-                        except:
-                            pass
+                    
+                    # change this part
+                    verified = True
+                    if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
+                        pass
+                    else:
+                        verified = transaction.verify(input_transaction)
+                        if verified == True:
+                            self.transaction_pool.transactions_unspent.spent(input_transaction)
+                    if verified == True:
+                        self.transaction_pool.add(transaction)
+                        self.send_message(str_data)
                     
             elif str_data.startswith("BLOCK"):
                 if str_data not in self.transaction_messages:
                     self.block_found = True
                     str_array = str_data.split(':', 1)
                     self.transaction_messages.append(str_data)
-
-                    # This is where I will call the functions to make a transaction from message
                     block_dict = eval(str_array[1])
                     block = Block.from_json_compatible(block_dict)
-                    ######################################## VERIFY #####################################
 
                     self.blockchain.add(block)
+                    # verify
                     self.transaction_pool.update_from_block(block)
-
+                    
                     date = block.time
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round = dt + timedelta(0, 60)
 
-                    for peer in self.peers:
-                        try:
-                            peer.send(data)
-                        except:
-                            pass
+                    self.send_message(str_data)
             
             elif str_data.startswith("CHAIN"):
                 if str_data not in self.transaction_messages and self.blockchain == None:
                     str_array = str_data.split(':', 1)
                     self.transaction_messages.append(str_data)
-
-                    # This is where I will call the functions to make a transaction from message
                     blockchain_dict = eval(str_array[1])
                     self.blockchain = Blockchain.from_json_compatible(blockchain_dict)
                     
@@ -156,10 +145,12 @@ class Node:
                             peer.send(data)
                             tim.sleep(0.3)
                             if self.blockchain != None:
+
                                 message = "CHAIN:" + str(self.blockchain.to_json_compatible())
                                 self.transaction_messages.append(message)
                                 peer.send(bytes(message, 'utf-8'))
                                 tim.sleep(0.5)
+
 
     def menu(self):
         while True:
@@ -324,14 +315,15 @@ class Node:
                     pass
 
     def generate_keys(self):
-        # Look in 3_2.py for exporting key as pem
         self.private_key = ECC.generate(curve='ed25519')
         self.public_key = self.private_key.public_key()
         self.pub_key_str = str(self.public_key.pointQ.x) + '+' + str(self.public_key.pointQ.y)
 
 
-if (len(sys.argv)) == 2:
-    p = Node(int(sys.argv[1]),None)
+user_port = input("Your port: ")
+peer_port = input("Peer port or 'N' if no peer: ")
 
-elif (len(sys.argv)) == 3:
-    p = Node(int(sys.argv[1]), sys.argv[2])
+if peer_port == 'N':
+    p = Node(int(user_port),None)
+else:
+    p = Node(int(user_port), peer_port)

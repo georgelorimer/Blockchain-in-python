@@ -105,8 +105,10 @@ class Transaction:
         try:
             verifier.verify(message, signature)
             print("The message is authentic")
+            return True
         except ValueError:
             print("The message is not authentic")
+            return False
 
         # ammounts for from transaction
         

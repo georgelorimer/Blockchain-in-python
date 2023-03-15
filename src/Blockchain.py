@@ -14,9 +14,10 @@ class Blockchain:
             self.blockchain = [GENESIS_BLOCK]
         else:
             self.blockchain = blockchain
-            
-
+    
+    ### UTILITY FUNCTIONS ###
     def add(self, block):
+        # block.verify
         self.blockchain.append(block)
 
     def head(self):
@@ -26,6 +27,8 @@ class Blockchain:
         prev_block = self.blockchain[-1]
         return prev_block.block_hash
 
+
+    ### JSON FUNCTIONS ###
     def to_json_compatible(self):
         blockchain = []
         for block in self.blockchain:
