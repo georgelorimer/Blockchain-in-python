@@ -140,16 +140,19 @@ class Node:
                         
                         self.connect_to_peer(int(str_array[1]))
                         tim.sleep(0.2)
-
+                        
                         for peer in self.peers:
-                            peer.send(data)
-                            tim.sleep(0.3)
-                            if self.blockchain != None:
+                            try:
+                                peer.send(data)
+                                tim.sleep(0.3)
+                                if self.blockchain != None:
 
-                                message = "CHAIN:" + str(self.blockchain.to_json_compatible())
-                                self.transaction_messages.append(message)
-                                peer.send(bytes(message, 'utf-8'))
-                                tim.sleep(0.5)
+                                    message = "CHAIN:" + str(self.blockchain.to_json_compatible())
+                                    self.transaction_messages.append(message)
+                                    peer.send(bytes(message, 'utf-8'))
+                                    tim.sleep(0.5)
+                            except:
+                                pass
 
 
     def menu(self):

@@ -27,20 +27,6 @@ class Transaction_Unspent:
                     self.utxo = self.utxo - transaction.outputs[0].value
                 self.unspent.remove(transaction)
 
-    # def update <--- updates from transaction pool adn blockchain
-    
-    # def utxo
-        # work out transaction
-        # return self.utxo
-
-    # COME BACK TO THIS
-    # def utxo(self):
-    #     balance = 0
-    #     for transaction in self.my_unspent:
-    #         for output in transaction.outputs:
-    #             if output.script_pub_key == self.pub_key_str:
-    #                 out
-
 
 
 class Transaction_Pool:
