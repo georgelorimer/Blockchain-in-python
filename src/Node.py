@@ -95,6 +95,8 @@ class Node:
                     if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
                         pass
                     else:
+                        print(transaction.to_json_complete())
+                        print('\n', input_transaction.to_json_complete())
                         verified = transaction.verify(input_transaction)
                         if verified == True:
                             self.transaction_pool.transactions_unspent.spent(input_transaction)
@@ -156,29 +158,19 @@ class Node:
         while True:
             choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block: ')
             if choice == "T":
-                counter = 1
-                print("Unspent Transactions:")
-                for transaction in self.transaction_pool.transactions_unspent.my_unspent:
-                    print(counter, '.\t', transaction.to_json_complete())
-                    counter += 1
-                transaction_choice = int(input('Choose your transaction to spend: '))
-                transaction_to_spend = self.transaction_pool.transactions_unspent.my_unspent[transaction_choice - 1]
-
-                ############# ADD VALIDATION ##############
-                # inputs
+                transaction_to_spend, script_pub_key, value = self.transaction_input()
                 transaction_hash = transaction_to_spend.hash
                 output_id = 0 # <------ FOR NOW
                 signer = eddsa.new(self.private_key, 'rfc8032')
                 script_sig = signer.sign(str(transaction_to_spend.to_json_complete()).encode('utf-8'))
 
-                #outputs
-                script_pub_key = input('Enter the public key of the desired recipient: ')
-                value = int(input("Ammount to send: "))
-
                 try:
                     transaction_main = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now())
                     ######################################## VERIFY #####################################
                     transaction_main.verify(transaction_to_spend)
+
+                    print('\n\n', transaction_main.to_json_complete(), '\n\n', transaction_to_spend.to_json_complete())
+
                     self.transaction_pool.add(transaction_main)
                     print("\n\n\nThis is my Transaction Pool: ", self.transaction_pool.list)
                     prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
@@ -270,6 +262,37 @@ class Node:
                 elif self.block_found == True:
                     print("\n\n\n I LOST \n\n\n")
                     self.block_found = False
+
+    #### MENU FUNCTIONS ####
+    def transaction_input(self):
+        transaction_to_spend = None
+        while transaction_to_spend == None:
+            counter = 1
+            print("Unspent Transactions:")
+            for transaction in self.transaction_pool.transactions_unspent.my_unspent:
+                print(counter, '.\t', transaction.to_json_complete())
+                counter += 1
+            transaction_choice = int(input('Choose your transaction to spend: '))
+            if transaction_choice in range(1, len(self.transaction_pool.transactions_unspent.my_unspent)+1):
+                transaction_to_spend = self.transaction_pool.transactions_unspent.my_unspent[transaction_choice - 1]
+                to_spend_value = transaction_to_spend.outputs[0].value
+            else:
+                transaction_to_spend = None
+                print("Not an option")
+        
+        script_pub_key = input('Enter the public key of the desired recipient: ')
+        
+        value = None
+        while value == None:
+            value = int(input("Amount to spend (Transaction amount: "+str(to_spend_value) +"): "))
+            if value < to_spend_value and value > 0:
+                pass
+            else:
+                value = None
+                print('incorrect value')
+
+        return transaction_to_spend, script_pub_key, value
+
 
 
 

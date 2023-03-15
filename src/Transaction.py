@@ -13,7 +13,7 @@ class Transaction_Input(namedtuple("Transaction_Input", ["transaction_hash", "ou
     @classmethod
     def from_json_compatible(cls, obj):
         """ Creates a new object of this class, from a JSON-serializable representation. """
-        return cls(str(obj['transaction_hash']), int(obj['output_id']), str(obj['script_sig']))
+        return cls(str(obj['transaction_hash']), int(obj['output_id']), obj['script_sig'])
 
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
