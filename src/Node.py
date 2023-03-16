@@ -1,6 +1,5 @@
 import socket
 import threading
-import time as tim
 from datetime import timedelta, datetime
 
 from Crypto.PublicKey import ECC
@@ -69,11 +68,26 @@ class Node:
 
  
     def handler(self, c, a):
+        message_q = []
         while True:
-            # try, except:
-            data = c.recv(65536)
-            
-            str_data = data.decode("utf-8")
+            if len(message_q) == 0:
+
+                # try, except:
+                data = c.recv(65536)
+
+                str_data = data.decode("utf-8")
+
+                m_array = str_data.split('€')
+
+                str_data = m_array[0]
+                for i in range(1, len(m_array)-1):
+                    message_q.append(m_array[i])
+
+
+            else:
+                str_data = message_q[0]
+                message_q.pop(0)
+
 
             if str_data.startswith("TRANSACTION"):
 
@@ -141,20 +155,18 @@ class Node:
                     if int(str_array[1]) != int(str(self.port)):
                         
                         self.connect_to_peer(int(str_array[1]))
-                        tim.sleep(0.2)
                         
-                        for peer in self.peers:
-                            try:
-                                peer.send(data)
-                                tim.sleep(0.3)
-                                if self.blockchain != None:
+                        self.transaction_messages.append(str_data)
+                        self.send_message(str_data)
 
-                                    message = "CHAIN:" + str(self.blockchain.to_json_compatible())
-                                    self.transaction_messages.append(message)
-                                    peer.send(bytes(message, 'utf-8'))
-                                    tim.sleep(0.5)
-                            except:
-                                pass
+                        try:
+                            if self.blockchain != None:
+
+                                message = "CHAIN:" + str(self.blockchain.to_json_compatible())
+                                self.transaction_messages.append(message)
+                                self.send_message(message)
+                        except:
+                            pass
 
 
     def menu(self):
@@ -176,7 +188,6 @@ class Node:
                 self.send_message(prefixed_message)
                 self.utxo()
                 
-                tim.sleep(0.2)
 
                 # Change Transaction
                 remaining = transaction_to_spend.outputs[0].value - value - transaction_fee
@@ -187,7 +198,6 @@ class Node:
                 self.transaction_messages.append(prefixed_message)
                 self.send_message(prefixed_message)
 
-                tim.sleep(0.3)
 
                 # Fee Transaction
                 t = Transaction(None,[Transaction_Input(transaction_hash, output_id, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
@@ -306,11 +316,12 @@ class Node:
         self.peers.append(peer_sock)
         self.peer_ports.append(peer_port)
         self.peer_dict[peer_sock] = peer_port
-        message = "PORT:" + str(self.port)
+        message = "PORT:" + str(self.port) + '€'
         peer_sock.send(bytes(message, 'utf-8'))
         print(f'Connected to peer at port {peer_port}')
 
     def send_message(self, message):
+        message = message + "€"
         broken_connections = []
         for peer in self.peers:
             try:
