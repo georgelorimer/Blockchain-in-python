@@ -95,9 +95,6 @@ class Transaction:
         return cls(hashp, inputs, outputs, timestamp, t_type)
 
     def verify(self, input_transaction, unspent):
-        # Verify if already spent <-------------------------------- Need to check when implementing the double spend
-        # check if a main transaction
-        # check if the input transaction is in the self.unspent
         verified_unspent = self.verify_unspent(input_transaction, unspent)
         if verified_unspent == False:
             return False

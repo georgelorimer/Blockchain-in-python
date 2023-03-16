@@ -133,21 +133,21 @@ class Node:
                     block_dict = eval(str_array[1])
                     block = Block.from_json_compatible(block_dict)
 
-                    self.blockchain.add(block)
-                    # verify
-                    self.transaction_pool.update_from_block(block)
+                    added = self.blockchain.add(block)
+                    if added == True:
+                        self.transaction_pool.update_from_block(block)
 
-                    
-                    
-                    date = block.time
-                    dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
-                    self.time_for_next_round = dt + timedelta(0, 60)
-                    self.utxo()
-                    if self.eligible == False:
-                        self.block_found = False
-                        self.eligible = True
+                        
+                        
+                        date = block.time
+                        dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+                        self.time_for_next_round = dt + timedelta(0, 60)
+                        self.utxo()
+                        if self.eligible == False:
+                            self.block_found = False
+                            self.eligible = True
 
-                    self.send_message(str_data)
+                        self.send_message(str_data)
                     
             
             elif str_data.startswith("CHAIN"):
@@ -244,6 +244,7 @@ class Node:
                 print('Balance is:', self.balance)
             
             elif choice == "U":
+                self.utxo()
                 counter = 1
                 print("Unspent Transactions:")
                 for transaction in self.my_unspent:
@@ -283,19 +284,21 @@ class Node:
                 print('mining...')
                 b = Block.create(self.transaction_pool, self.blockchain.prev_block_hash(), self.pub_key_str)
                 if self.block_found == False:
-                    print("\n\n\n I Won \n\n\n")
+                    
                     # send Block to others
                     prefixed_message="BLOCK:" + str(b.to_json_complete())
                     self.transaction_messages.append(prefixed_message)
                     self.send_message(prefixed_message)
 
-                    self.blockchain.add(b)
-                    self.transaction_pool.update_from_block(b)
+                    added = self.blockchain.add(b)
+                    if added == True:
+                        print("\n\n\n I Won \n\n\n")
+                        self.transaction_pool.update_from_block(b)
 
-                    date = b.time
-                    dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
-                    self.time_for_next_round =  dt + timedelta(0,60)
-                    self.utxo()
+                        date = b.time
+                        dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+                        self.time_for_next_round =  dt + timedelta(0,60)
+                        self.utxo()
                 elif self.block_found == True:
                     print("\n\n\n I LOST \n\n\n")
                     self.block_found = False

@@ -17,8 +17,12 @@ class Blockchain:
     
     ### UTILITY FUNCTIONS ###
     def add(self, block):
-        # block.verify
-        self.blockchain.append(block)
+        if self.blockchain[-1].block_hash != block.prev_block_hash:
+            print('Invalid Block')
+            return False
+        else:
+            self.blockchain.append(block)
+            return True
 
     def head(self):
         return self.blockchain[-1]
