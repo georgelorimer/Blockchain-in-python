@@ -26,7 +26,7 @@ class Block:
         for transaction in transactions:
             if transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
                 fee += transaction.outputs[0].value
-        t = Transaction(None,[Transaction_Input("COINBASE_TRANSACTION", 0, 'None')], [Transaction_Output(creator, 50+fee)], datetime.now())
+        t = Transaction(None,[Transaction_Input("COINBASE_TRANSACTION", 0, 'None')], [Transaction_Output(creator, 50+fee)], datetime.now(), 'COINBASE')
         transactions.insert(0, t)
 
         hash_of_transaction = sha256(str(transactions).encode('utf-8')).hexdigest()

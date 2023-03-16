@@ -29,6 +29,7 @@ class Transaction_Unspent:
 
 
 
+
 class Transaction_Pool:
     # not only holds the Transaction pool
     # also holds the unspent transactions from previos blocks
@@ -43,8 +44,6 @@ class Transaction_Pool:
         if transaction in self.list:
             return False
         else:
-
-            ############# CHECK FOR VALIDITY #############
             for i in range (len(transaction.outputs)): ########## BETTER
                 if transaction.outputs[i].script_pub_key == self.pub_key_str:
                     self.transactions_unspent.add_my_unspent(transaction, transaction.outputs[i].value)
@@ -74,7 +73,6 @@ class Transaction_Pool:
     def update_from_block(self, block):
         block_transactions = block.to_json_complete()['transactions']
 
-        # list of leftover transactions left out of the block
         new_transaction_pool = []
 
         for pool_transaction in self.list:

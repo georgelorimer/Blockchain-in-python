@@ -166,7 +166,7 @@ class Node:
                 script_sig = signer.sign(str(transaction_to_spend.to_json_complete()).encode('utf-8'))
                 
                 # Main Transaction
-                transaction_main = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now())
+                transaction_main = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now(), 'MAIN')
                 transaction_main.verify(transaction_to_spend)
                 self.transaction_pool.add(transaction_main)
                 prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
@@ -174,17 +174,21 @@ class Node:
                 self.send_message(prefixed_message)
                 self.transaction_pool.transactions_unspent.spent(transaction_to_spend)
                 
+                tim.sleep(0.2)
+
                 # Change Transaction
                 remaining = transaction_to_spend.outputs[0].value - value - transaction_fee
-                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now())
+                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
                 t.verify(transaction_to_spend)
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
                 self.send_message(prefixed_message)
 
+                tim.sleep(0.3)
+
                 # Fee Transaction
-                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now())
+                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
@@ -192,7 +196,7 @@ class Node:
         
 
             elif choice == 'G':
-                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 0, 'None')], [Transaction_Output(self.pub_key_str, 100)], datetime.now())
+                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 0, 'None')], [Transaction_Output(self.pub_key_str, 100)], datetime.now(), 'GEN')
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
@@ -201,6 +205,10 @@ class Node:
             
             elif choice == "A":
                 print('Balance is:', self.transaction_pool.transactions_unspent.utxo)
+            
+            elif choice == "AS":
+                self.utxo()
+                print('Balance is:', self.balance)
             
             elif choice == "U":
                 counter = 1
@@ -335,6 +343,42 @@ class Node:
         self.private_key = ECC.generate(curve='ed25519')
         self.public_key = self.private_key.public_key()
         self.pub_key_str = str(self.public_key.pointQ.x) + '+' + str(self.public_key.pointQ.y)
+
+
+    def utxo(self):
+        # list of all transactions in blockchain and transaction pool - genesis block
+        all_transactions = self.blockchain.return_transactions() + self.transaction_pool.from_json_transactions()
+
+        unspent = []
+
+        for transaction in all_transactions:
+            if transaction.type == "GEN" or transaction.type == 'COINBASE' or transaction.type == 'CHANGE':
+                unspent.append(transaction)
+            else:
+                if transaction.type == "MAIN":
+                    # remove spent transaction
+                    for spent in unspent:
+                        if spent.hash == transaction.inputs[0].transaction_hash:
+                            unspent.remove(spent)
+
+                    # add main transaction
+                    unspent.append(transaction)
+        
+        my_unspent = []
+        balance = 0
+
+        for transaction in unspent:
+            if transaction.outputs[0].script_pub_key == self.pub_key_str:
+                my_unspent.append(transaction)
+                balance += transaction.outputs[0].value
+        
+        self.unspent = unspent
+        self.my_unspent = []
+        self.balance = balance
+
+
+
+
 
 
 user_port = input("Your port: ")

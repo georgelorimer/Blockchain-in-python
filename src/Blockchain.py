@@ -42,3 +42,15 @@ class Blockchain:
         for block in obj['blockchain']:
             new_blockchain.append(Block.from_json_compatible(block))
         return cls(new_blockchain)
+
+
+    def return_transactions(self):
+        blockchain_transactions = []
+
+        for i in range(1, len(self.blockchain)):
+            block = self.blockchain[i]
+
+            for transaction in block.block_transactions:
+                blockchain_transactions.append(transaction)
+
+        return blockchain_transactions

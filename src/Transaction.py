@@ -41,13 +41,14 @@ class Transaction_Output(namedtuple("Transaction_Output", ["script_pub_key", "va
     
 class Transaction:
 
-    def __init__(self, hash: str, inputs: 'List[Transaction_Input]', outputs: 'List[Transaction_Output]', timestamp: 'datetime'):
+    def __init__(self, hash: str, inputs: 'List[Transaction_Input]', outputs: 'List[Transaction_Output]', timestamp: 'datetime', type: str):
         self.inputs = inputs
         self.outputs = outputs
         self.timestamp = timestamp
         self.hash = hash
         if self.hash == None:
             self.hash = self.get_hash()
+        self.type = type
 
     def get_hash(self):
         if self.hash == None:
@@ -71,13 +72,16 @@ class Transaction:
     def to_json_complete(self):
         return {
             "hash_pointer" : self.get_hash(),
-            "contents" : self.to_json_contents()
+            "contents" : self.to_json_contents(),
+            'type' : self.type
         }
 
     @classmethod
     def from_json_compatible(cls, obj: dict):
         """ Creates a new object of this class, from a JSON-serializable representation. """
         hashp = obj['hash_pointer']
+
+        t_type = obj['type']
 
         content = obj['contents']
 
@@ -88,7 +92,7 @@ class Transaction:
         for out in content['outputs']:
             outputs.append(Transaction_Output.from_json_compatible(out))
         timestamp = datetime.strptime(content['timestamp'], "%Y-%m-%dT%H:%M:%S.%f UTC")
-        return cls(hashp, inputs, outputs, timestamp)
+        return cls(hashp, inputs, outputs, timestamp, t_type)
 
     def verify(self, input_transaction):
 
