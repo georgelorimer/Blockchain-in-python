@@ -52,7 +52,7 @@ class Transaction_Pool:
                 double_spend = False
                 for transaction in block.block_transactions:
                     # FOR DOUBLE SPEND
-                    if transaction.inputs[0].transaction_hash == pool_transaction.inputs[0].transaction_hash:
+                    if transaction.inputs[0].transaction_hash == pool_transaction.inputs[0].transaction_hash and pool_transaction.type == 'MAIN':
                         print('Transaction moved from transaction pool because a double spend has been attempted', pool_transaction.to_json_complete())
                         double_spend = True
                         break

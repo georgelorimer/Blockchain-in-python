@@ -30,15 +30,18 @@ class Node:
         if connection is not None:
             self.connect_to_peer(int(connection))
             self.blockchain = None
+            self.eligible = False
+            self.mining = False
         else:
             # Create Blockchain
             self.blockchain = Blockchain(None)
             date = self.blockchain.head().time
             dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
             self.time_for_next_round =  dt + timedelta(0,60)
+            self.eligible = True
+            self.mining = True
 
         # for mining
-        self.mining = False
         self.block_found = False 
 
         m_thread = threading.Thread(target=self.menu)
@@ -91,7 +94,7 @@ class Node:
 
             if str_data.startswith("TRANSACTION"):
 
-                if str_data not in self.transaction_messages:
+                if str_data not in self.transaction_messages and self.eligible == True:
                     str_array = str_data.split(':', 1)
                     self.transaction_messages.append(str_data)
 
@@ -99,19 +102,24 @@ class Node:
                     transaction = Transaction.from_json_compatible(transaction_dict)
 
                     self.utxo()
-
+                    
+                    input_transaction = None
                     input_hash = transaction.inputs[0].transaction_hash
                     for t in self.unspent:
                         if t.hash == input_hash:
                             input_transaction = t
                             break
                     
+                    
                     # change this part
                     verified = True
                     if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
                         pass
                     else:
-                        verified = transaction.verify(input_transaction, self.unspent)
+                        if input_transaction == None:
+                            verified = False
+                        else:
+                            verified = transaction.verify(input_transaction, self.unspent)
                     if verified == True:
                         self.transaction_pool.add(transaction)
                         self.utxo()
@@ -128,12 +136,19 @@ class Node:
                     self.blockchain.add(block)
                     # verify
                     self.transaction_pool.update_from_block(block)
+
+                    
                     
                     date = block.time
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round = dt + timedelta(0, 60)
                     self.utxo()
+                    if self.eligible == False:
+                        self.block_found = False
+                        self.eligible = True
+
                     self.send_message(str_data)
+                    
             
             elif str_data.startswith("CHAIN"):
                 if str_data not in self.transaction_messages and self.blockchain == None:
@@ -170,6 +185,9 @@ class Node:
 
 
     def menu(self):
+        print('Waiting for block to be made')
+        while self.eligible == False:
+            pass
         while True:
             choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block: ')
             if choice == "T":
@@ -236,6 +254,8 @@ class Node:
                 if self.mining == False:
                     self.mining = True
                     print('Mining is turned on')
+                    if self.eligible == False:
+                        print('Not eligible to mine until the next round')
                     print('Time till next: ', self.time_for_next_round - datetime.now())
                 elif self.mining == True:
                     self.mining = False
@@ -256,7 +276,7 @@ class Node:
     def miner(self):
         while True:
             
-            if self.mining == True and datetime.now() > self.time_for_next_round:
+            if self.mining == True and datetime.now() > self.time_for_next_round and self.eligible == True:
                 print('mining...')
                 b = Block.create(self.transaction_pool, self.blockchain.prev_block_hash(), self.pub_key_str)
                 if self.block_found == False:
