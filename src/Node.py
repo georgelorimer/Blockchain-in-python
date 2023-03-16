@@ -111,7 +111,7 @@ class Node:
                     if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
                         pass
                     else:
-                        verified = transaction.verify(input_transaction)
+                        verified = transaction.verify(input_transaction, self.unspent)
                     if verified == True:
                         self.transaction_pool.add(transaction)
                         self.utxo()
@@ -173,6 +173,7 @@ class Node:
         while True:
             choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block: ')
             if choice == "T":
+                self.utxo()
                 transaction_to_spend, script_pub_key, value, transaction_fee = self.transaction_input()
                 transaction_hash = transaction_to_spend.hash
                 output_id = 0
@@ -181,30 +182,33 @@ class Node:
                 
                 # Main Transaction
                 transaction_main = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now(), 'MAIN')
-                transaction_main.verify(transaction_to_spend)
-                self.transaction_pool.add(transaction_main)
-                prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
-                self.transaction_messages.append(prefixed_message)
-                self.send_message(prefixed_message)
-                self.utxo()
-                
+                verified = transaction_main.verify(transaction_to_spend, self.unspent)
+                if verified == True:
+                    self.transaction_pool.add(transaction_main)
+                    prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
+                    self.transaction_messages.append(prefixed_message)
+                    self.send_message(prefixed_message)
+                    self.utxo()
+                    
 
-                # Change Transaction
-                remaining = transaction_to_spend.outputs[0].value - value - transaction_fee
-                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
-                t.verify(transaction_to_spend)
-                self.transaction_pool.add(t)
-                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                self.transaction_messages.append(prefixed_message)
-                self.send_message(prefixed_message)
+                    # Change Transaction
+                    remaining = transaction_to_spend.outputs[0].value - value - transaction_fee
+                    t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
+                    t.verify(transaction_to_spend, self.unspent)
+                    self.transaction_pool.add(t)
+                    prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                    self.transaction_messages.append(prefixed_message)
+                    self.send_message(prefixed_message)
 
 
-                # Fee Transaction
-                t = Transaction(None,[Transaction_Input(transaction_hash, output_id, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
-                self.transaction_pool.add(t)
-                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                self.transaction_messages.append(prefixed_message)
-                self.send_message(prefixed_message)
+                    # Fee Transaction
+                    t = Transaction(None,[Transaction_Input(transaction_hash, output_id, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
+                    self.transaction_pool.add(t)
+                    prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                    self.transaction_messages.append(prefixed_message)
+                    self.send_message(prefixed_message)
+                else:
+                    print("Transaction not verified")
         
 
             elif choice == 'G':

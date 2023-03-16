@@ -1,3 +1,6 @@
+
+
+
 class Transaction_Pool:
     # not only holds the Transaction pool
     # also holds the unspent transactions from previos blocks
@@ -9,7 +12,7 @@ class Transaction_Pool:
 
     
     def add(self, transaction):
-        if transaction in self.list:
+        if transaction.to_json_complete() in self.list_json:
             return False
         else:
             self.list.append(transaction)
@@ -46,7 +49,15 @@ class Transaction_Pool:
                     in_list = True
                     break
             if in_list == False:
-                new_transaction_pool.append(pool_transaction)
+                double_spend = False
+                for transaction in block.block_transactions:
+                    # FOR DOUBLE SPEND
+                    if transaction.inputs[0].transaction_hash == pool_transaction.inputs[0].transaction_hash:
+                        print('Transaction moved from transaction pool because a double spend has been attempted', pool_transaction.to_json_complete())
+                        double_spend = True
+                        break
+                if double_spend == False:
+                    new_transaction_pool.append(pool_transaction)
         
         self.list = new_transaction_pool
 

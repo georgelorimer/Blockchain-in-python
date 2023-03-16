@@ -94,7 +94,13 @@ class Transaction:
         timestamp = datetime.strptime(content['timestamp'], "%Y-%m-%dT%H:%M:%S.%f UTC")
         return cls(hashp, inputs, outputs, timestamp, t_type)
 
-    def verify(self, input_transaction):
+    def verify(self, input_transaction, unspent):
+        # Verify if already spent <-------------------------------- Need to check when implementing the double spend
+        # check if a main transaction
+        # check if the input transaction is in the self.unspent
+        verified_unspent = self.verify_unspent(input_transaction, unspent)
+        if verified_unspent == False:
+            return False
 
         # Verify signature
         input_key = input_transaction.outputs[0].script_pub_key
@@ -115,5 +121,13 @@ class Transaction:
             return False
 
         # ammounts for from transaction
-        
+    def verify_unspent(self, input_transaction, unspent):
+        if self.type == 'MAIN':
+            if input_transaction not in unspent:
+                print('This transaction is already spent')
+                return False
+            else:
+                print('This transaction has not yet been spent')
+                return True
+
 
