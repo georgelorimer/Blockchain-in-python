@@ -24,7 +24,7 @@ class Block:
         transactions = transaction_pool.from_json_transactions()
         fee = 0
         for transaction in transactions:
-            if transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
+            if transaction.type == 'FEE':
                 fee += transaction.outputs[0].value
         t = Transaction(None,[Transaction_Input("COINBASE_TRANSACTION", 0, 'None')], [Transaction_Output(creator, 50+fee)], datetime.now(), 'COINBASE')
         transactions.insert(0, t)

@@ -7,7 +7,7 @@ from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
 
 from Transaction import *
-from Transaction_Collections import *
+from Transaction_Pool import *
 from Block import *
 from Blockchain import *
 
@@ -84,9 +84,11 @@ class Node:
                     transaction_dict = eval(str_array[1])
                     transaction = Transaction.from_json_compatible(transaction_dict)
 
+                    self.utxo()
+
                     input_hash = transaction.inputs[0].transaction_hash
-                    for t in self.transaction_pool.transactions_unspent.unspent:
-                        if t.get_hash() == input_hash:
+                    for t in self.unspent:
+                        if t.hash == input_hash:
                             input_transaction = t
                             break
                     
@@ -96,10 +98,9 @@ class Node:
                         pass
                     else:
                         verified = transaction.verify(input_transaction)
-                        if verified == True:
-                            self.transaction_pool.transactions_unspent.spent(input_transaction)
                     if verified == True:
                         self.transaction_pool.add(transaction)
+                        self.utxo()
                         self.send_message(str_data)
                     
             elif str_data.startswith("BLOCK"):
@@ -117,7 +118,7 @@ class Node:
                     date = block.time
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round = dt + timedelta(0, 60)
-
+                    self.utxo()
                     self.send_message(str_data)
             
             elif str_data.startswith("CHAIN"):
@@ -130,6 +131,7 @@ class Node:
                     date = self.blockchain.head().time
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round =  dt + timedelta(0,60)
+                    self.utxo()
             
             elif str_data.startswith("PORT"):
                 str_array = str_data.split(':')
@@ -172,7 +174,7 @@ class Node:
                 prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
                 self.send_message(prefixed_message)
-                self.transaction_pool.transactions_unspent.spent(transaction_to_spend)
+                self.utxo()
                 
                 tim.sleep(0.2)
 
@@ -201,19 +203,15 @@ class Node:
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
                 self.send_message(prefixed_message)
-
             
             elif choice == "A":
-                print('Balance is:', self.transaction_pool.transactions_unspent.utxo)
-            
-            elif choice == "AS":
                 self.utxo()
                 print('Balance is:', self.balance)
             
             elif choice == "U":
                 counter = 1
                 print("Unspent Transactions:")
-                for transaction in self.transaction_pool.transactions_unspent.my_unspent:
+                for transaction in self.my_unspent:
                     print(counter, '.\t', transaction.to_json_complete())
                     counter += 1
 
@@ -260,22 +258,24 @@ class Node:
                     date = b.time
                     dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                     self.time_for_next_round =  dt + timedelta(0,60)
+                    self.utxo()
                 elif self.block_found == True:
                     print("\n\n\n I LOST \n\n\n")
                     self.block_found = False
 
     #### MENU FUNCTIONS ####
     def transaction_input(self):
+        self.utxo()
         transaction_to_spend = None
         while transaction_to_spend == None:
             counter = 1
             print("Unspent Transactions:")
-            for transaction in self.transaction_pool.transactions_unspent.my_unspent:
+            for transaction in self.my_unspent:
                 print(counter, '.\t', transaction.to_json_complete())
                 counter += 1
             transaction_choice = int(input('Choose your transaction to spend: '))
-            if transaction_choice in range(1, len(self.transaction_pool.transactions_unspent.my_unspent)+1):
-                transaction_to_spend = self.transaction_pool.transactions_unspent.my_unspent[transaction_choice - 1]
+            if transaction_choice in range(1, len(self.my_unspent)+1):
+                transaction_to_spend = self.my_unspent[transaction_choice - 1]
                 to_spend_value = transaction_to_spend.outputs[0].value
             else:
                 transaction_to_spend = None
@@ -373,7 +373,7 @@ class Node:
                 balance += transaction.outputs[0].value
         
         self.unspent = unspent
-        self.my_unspent = []
+        self.my_unspent = my_unspent
         self.balance = balance
 
 
