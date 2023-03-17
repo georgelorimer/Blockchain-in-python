@@ -99,8 +99,17 @@ class Transaction:
         if verified_unspent == False:
             return False
 
+        # Get key from the output
+        inp_script_pub_key = input_transaction.outputs[0].script_pub_key
+        inp_key_array = inp_script_pub_key.split(':')
+
+        if inp_key_array[0] == "P2PK":
+            input_key = inp_key_array[1]
+        else:
+            return False
+        
+
         # Verify signature
-        input_key = input_transaction.outputs[0].script_pub_key
         input_key_split = input_key.split('+')
         pub = ECC.construct(curve='ed25519', point_x = int(input_key_split[0]), point_y = int(input_key_split[1]))
 

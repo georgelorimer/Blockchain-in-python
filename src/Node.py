@@ -198,6 +198,7 @@ class Node:
                     transaction_to_spend, script_pub_key, value, transaction_fee = self.transaction_input()
                     transaction_hash = transaction_to_spend.hash
                     output_id = 0
+
                     signer = eddsa.new(self.private_key, 'rfc8032')
                     script_sig = signer.sign(str(transaction_to_spend.to_json_complete()).encode('utf-8'))
                     
@@ -214,7 +215,7 @@ class Node:
 
                         # Change Transaction
                         remaining = transaction_to_spend.outputs[0].value - value - transaction_fee
-                        t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
+                        t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output("P2PK:" + self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
                         t.verify(transaction_to_spend, self.unspent)
                         self.transaction_pool.add(t)
                         prefixed_message="TRANSACTION:" + str(t.to_json_complete())
@@ -233,7 +234,7 @@ class Node:
         
 
             elif choice == 'G':
-                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 0, 'None')], [Transaction_Output(self.pub_key_str, 100)], datetime.now(), 'GEN')
+                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 0, 'None')], [Transaction_Output("P2PK:" + self.pub_key_str, 100)], datetime.now(), 'GEN')
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
@@ -309,6 +310,13 @@ class Node:
         tried = False
         while tried == False:
             try:
+                script_choice = input('How do you want to send your coins?\n\t"P2PK" to pay to pub_key: ')
+                if script_choice == "P2PK":
+                    pass
+                else:
+                    print('Not a valid choice')
+                    tried == False
+                    continue
                 transaction_to_spend = None
                 while transaction_to_spend == None:
                     counter = 1
@@ -325,6 +333,10 @@ class Node:
                         print("Not an option")
                 
                 script_pub_key = input('Enter the public key of the desired recipient: ')
+
+                script_pub_key = script_choice + ':' + script_pub_key
+
+                # validate checksum
                 
                 value = None
                 while value == None:
@@ -397,7 +409,6 @@ class Node:
     def utxo(self):
         # list of all transactions in blockchain and transaction pool - genesis block
         all_transactions = self.blockchain.return_transactions() + self.transaction_pool.from_json_transactions()
-
         unspent = []
 
         for transaction in all_transactions:
@@ -416,17 +427,24 @@ class Node:
         my_unspent = []
         balance = 0
 
+
         for transaction in unspent:
-            if transaction.outputs[0].script_pub_key == self.pub_key_str:
+            output_key = None
+            transaction_key = transaction.outputs[0].script_pub_key
+
+            out_key_array = transaction_key.split(':')
+
+            if out_key_array[0] == "P2PK":
+                output_key = out_key_array[1]
+
+            if output_key == self.pub_key_str:
                 my_unspent.append(transaction)
                 balance += transaction.outputs[0].value
         
+
         self.unspent = unspent
         self.my_unspent = my_unspent
         self.balance = balance
-
-
-
 
 
 
