@@ -15,6 +15,9 @@ class Block:
         # Contents
         self.block_transactions = block_transactions
 
+        self.target = 5
+        self.threshold = "0"*self.target
+
         if self.block_hash == None:
             self.proof_of_work()
 
@@ -38,15 +41,14 @@ class Block:
 
     def proof_of_work(self):
         
-        target = 5
-        threshold = "0"*target
+        
         found = False
         starttime = datetime.now()
         
         while found == False:
             toHash = str(self.to_json_header())
             hashed = sha256(toHash.encode('utf-8')).hexdigest()
-            if hashed.startswith(threshold):
+            if hashed.startswith(self.threshold):
                 endtime = datetime.now()
                 found = True
                 print (endtime - starttime)

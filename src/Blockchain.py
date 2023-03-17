@@ -21,8 +21,16 @@ class Blockchain:
             print('Invalid Block')
             return False
         else:
-            self.blockchain.append(block)
-            return True
+
+            toHash = str(block.to_json_header())
+            hashed = sha256(toHash.encode('utf-8')).hexdigest()
+
+            if hashed.startswith(block.threshold):
+                self.blockchain.append(block)
+                return True
+            else:
+                print('Nonce is incorrect')
+                return False
 
     def head(self):
         return self.blockchain[-1]
