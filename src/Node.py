@@ -343,7 +343,11 @@ class Node:
                 script_pub_key = input('Enter the public key of the desired recipient: ')
 
                 if script_choice == "P2PKS":
-                    pass
+                    if self.check_addr(script_pub_key) == True:
+                        pass
+                    else:
+                        print('Secure key not valid')
+                        continue
 
                 script_pub_key = script_choice + ':' + script_pub_key
 
@@ -447,6 +451,11 @@ class Node:
 
             if out_key_array[0] == "P2PK":
                 output_key = out_key_array[1]
+            
+            if out_key_array[0] == "P2PKS":
+                if self.check_addr(out_key_array[1]) == False:
+                    print('Secure key not valid')
+                output_key = self.addr_to_pub(out_key_array[1])
 
             if output_key == self.pub_key_str:
                 my_unspent.append(transaction)

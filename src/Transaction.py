@@ -4,9 +4,10 @@ from datetime import datetime
 from collections import namedtuple
 from hashlib import sha256
 
+
 from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
-
+import base58
 
 class Transaction_Input(namedtuple("Transaction_Input", ["transaction_hash", "output_id", "script_sig"])):
 
@@ -105,6 +106,12 @@ class Transaction:
 
         if inp_key_array[0] == "P2PK":
             input_key = inp_key_array[1]
+
+        elif inp_key_array[0] == "P2PKS":
+            if self.check_addr(inp_key_array[1]) == False:
+                print('Secure key not valid')
+                return False
+            input_key = self.addr_to_pub(inp_key_array[1])
         else:
             return False
         
@@ -136,4 +143,26 @@ class Transaction:
                 print('This transaction has not yet been spent')
                 return True
 
+    def check_addr(self, addr):
+        addr_split= addr.split('+')
 
+        check_string = addr_split[0] + '+' + addr_split[1] + '+'
+
+        check_cs = sha256(check_string.encode('utf-8')).hexdigest()[:8]
+
+        if check_cs == addr_split[2]:
+            return True
+        else:
+            return False
+    
+    def addr_to_pub(self, addr):
+        addr_array = addr.split('+')
+        bytex = base58.b58decode(addr_array[0].encode('utf-8'))
+        bytey = base58.b58decode(addr_array[1].encode('utf-8'))
+
+        x= int.from_bytes(bytex, 'big')
+        y= int.from_bytes(bytey, 'big')
+
+        pub_key_str = str(x) + "+" +str(y)
+
+        return pub_key_str
