@@ -4,6 +4,8 @@ from datetime import timedelta, datetime
 
 from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
+import base58
+from hashlib import sha256
 
 from Transaction import *
 from Transaction_Pool import *
@@ -189,7 +191,7 @@ class Node:
         while self.eligible == False:
             pass
         while True:
-            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block: ')
+            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key or "KS" for your secure key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block: ')
             if choice == "T":
                 self.utxo()
                 if not self.my_unspent:
@@ -254,6 +256,12 @@ class Node:
 
             elif choice == "K":
                 print('Your public key is:', self.pub_key_str)
+            
+            elif choice == "KS":
+                address = self.pub_to_addr(self.pub_key_str)
+                print('Your secure key is:', address)
+                print('Is valid:', self.check_addr(address))
+                print('Public Key is:', self.addr_to_pub(address))
 
             elif choice == "M":
                 if self.mining == False:
@@ -310,8 +318,8 @@ class Node:
         tried = False
         while tried == False:
             try:
-                script_choice = input('How do you want to send your coins?\n\t"P2PK" to pay to pub_key: ')
-                if script_choice == "P2PK":
+                script_choice = input('How do you want to send your coins?\n\t"P2PK" to pay to pub_key\n\t"P2PKS" to pay to pub_key with a checksum: ')
+                if script_choice == "P2PK" or script_choice == "P2PKS":
                     pass
                 else:
                     print('Not a valid choice')
@@ -333,6 +341,9 @@ class Node:
                         print("Not an option")
                 
                 script_pub_key = input('Enter the public key of the desired recipient: ')
+
+                if script_choice == "P2PKS":
+                    pass
 
                 script_pub_key = script_choice + ':' + script_pub_key
 
@@ -445,6 +456,49 @@ class Node:
         self.unspent = unspent
         self.my_unspent = my_unspent
         self.balance = balance
+
+    #### KEY SECURE FUNCTIONS 
+    def pub_to_addr(self, key):
+        pub_array = key.split('+')
+        intx = int(pub_array[0])
+        inty = int(pub_array[1])
+
+        x58 = base58.b58encode_int(intx).decode("utf-8")
+        y58 = base58.b58encode_int(inty).decode("utf-8")
+
+        string = str(x58) + '+' + str(y58) + '+'
+
+        hash = sha256(string.encode('utf-8')).hexdigest()
+
+        checksum = hash[:8]
+
+        address = string + checksum
+
+        return address
+    
+    def check_addr(self, addr):
+        addr_split= addr.split('+')
+
+        check_string = addr_split[0] + '+' + addr_split[1] + '+'
+
+        check_cs = sha256(check_string.encode('utf-8')).hexdigest()[:8]
+
+        if check_cs == addr_split[2]:
+            return True
+        else:
+            return False
+    
+    def addr_to_pub(self, addr):
+        addr_array = addr.split('+')
+        bytex = base58.b58decode(addr_array[0].encode('utf-8'))
+        bytey = base58.b58decode(addr_array[1].encode('utf-8'))
+
+        x= int.from_bytes(bytex, 'big')
+        y= int.from_bytes(bytey, 'big')
+
+        pub_key_str = str(x) + "+" +str(y)
+
+        return pub_key_str
 
 
 
