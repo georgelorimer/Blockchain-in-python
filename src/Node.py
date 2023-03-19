@@ -46,16 +46,18 @@ class Node:
         # for mining
         self.block_found = False 
 
-        m_thread = threading.Thread(target=self.menu)
-        m_thread.daemon = True
-        m_thread.start()
+        # m_thread = threading.Thread(target=self.menu)
+        # m_thread.daemon = True
+        # m_thread.start()
 
         min_thread = threading.Thread(target=self.miner)
         min_thread.daemon = True
         min_thread.start()
 
         # start loop for listening to connections
-        self.listen()
+        listen_thread = threading.Thread(target=self.listen)
+        listen_thread.daemon = True
+        listen_thread.start()
 
     #### LOOPING FUNCTIONS ####
 
@@ -574,11 +576,3 @@ class Node:
         return pub_key_str
 
 
-
-user_port = input("Your port: ")
-peer_port = input("Peer port or 'N' if no peer: ")
-
-if peer_port == 'N':
-    p = Node(int(user_port),None)
-else:
-    p = Node(int(user_port), peer_port)
