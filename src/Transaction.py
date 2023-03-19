@@ -9,18 +9,17 @@ from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
 import base58
 
-class Transaction_Input(namedtuple("Transaction_Input", ["transaction_hash", "output_id", "script_sig"])):
+class Transaction_Input(namedtuple("Transaction_Input", ["transaction_hash", "script_sig"])):
 
     @classmethod
     def from_json_compatible(cls, obj):
         """ Creates a new object of this class, from a JSON-serializable representation. """
-        return cls(str(obj['transaction_hash']), int(obj['output_id']), obj['script_sig'])
+        return cls(str(obj['transaction_hash']), obj['script_sig'])
 
     def to_json_compatible(self):
         """ Returns a JSON-serializable representation of this object. """
         return {
             'transaction_hash': self.transaction_hash,
-            'output_id': self.output_id,
             'script_sig': self.script_sig
         }
 
@@ -95,7 +94,10 @@ class Transaction:
         timestamp = datetime.strptime(content['timestamp'], "%Y-%m-%dT%H:%M:%S.%f UTC")
         return cls(hashp, inputs, outputs, timestamp, t_type)
 
-    def verify(self, input_transaction, unspent):
+
+
+
+    def verify(self, input_transaction, unspent, count):
         verified_unspent = self.verify_unspent(input_transaction, unspent)
         if verified_unspent == False:
             return False
@@ -104,7 +106,7 @@ class Transaction:
         inp_script_pub_key = input_transaction.outputs[0].script_pub_key
         inp_key_array = inp_script_pub_key.split(':')
 
-        if inp_key_array[0] == "P2PK":
+        if inp_key_array[0] == "P2PK" or inp_key_array[0] == "MULTIP2PK":
             input_key = inp_key_array[1]
 
         elif inp_key_array[0] == "P2PKS":
@@ -120,7 +122,7 @@ class Transaction:
         input_key_split = input_key.split('+')
         pub = ECC.construct(curve='ed25519', point_x = int(input_key_split[0]), point_y = int(input_key_split[1]))
 
-        signature = self.inputs[0].script_sig
+        signature = self.inputs[count].script_sig
 
         message = str(input_transaction.to_json_complete()).encode('utf-8')
 
@@ -142,6 +144,12 @@ class Transaction:
             else:
                 print('This transaction has not yet been spent')
                 return True
+
+
+
+
+
+
 
     def check_addr(self, addr):
         addr_split= addr.split('+')

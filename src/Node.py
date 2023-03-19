@@ -104,25 +104,30 @@ class Node:
                     transaction = Transaction.from_json_compatible(transaction_dict)
 
                     self.utxo()
-                    
-                    input_transaction = None
-                    input_hash = transaction.inputs[0].transaction_hash
-                    for t in self.unspent:
-                        if t.hash == input_hash:
-                            input_transaction = t
-                            break
-                    
-                    
-                    # change this part
-                    verified = True
-                    if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
-                        pass
-                    else:
-                        if input_transaction == None:
-                            verified = False
+                    count = 0
+                    for input in transaction.inputs:
+                        input_transaction = None
+                        input_hash = input.transaction_hash
+                        for t in self.unspent:
+                            if t.hash == input_hash:
+                                input_transaction = t
+                                break
+                         
+                        
+                        # change this part
+                        verified = True
+                        if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
+                            pass
                         else:
-                            verified = transaction.verify(input_transaction, self.unspent)
+                            if input_transaction == None:
+                                verified = False
+                            else:
+                                verified = transaction.verify(input_transaction, self.unspent, count) 
+                        count += 1
+
+                    
                     if verified == True:
+                        print('Success')
                         self.transaction_pool.add(transaction)
                         self.utxo()
                         self.send_message(str_data)
@@ -197,16 +202,28 @@ class Node:
                 if not self.my_unspent:
                     print('No transactions to use')
                 else:
-                    transaction_to_spend, script_pub_key, value, transaction_fee = self.transaction_input()
-                    transaction_hash = transaction_to_spend.hash
-                    output_id = 0
+                    transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value = self.transaction_input()
+                    inputs = []
+                    for transaction in transaction_to_spend:
+                        transaction_hash = transaction.hash
 
-                    signer = eddsa.new(self.private_key, 'rfc8032')
-                    script_sig = signer.sign(str(transaction_to_spend.to_json_complete()).encode('utf-8'))
+                        signer = eddsa.new(self.private_key, 'rfc8032')
+                        script_sig = signer.sign(str(transaction.to_json_complete()).encode('utf-8'))
+                        inputs.append(Transaction_Input(transaction_hash, script_sig))
                     
                     # Main Transaction
-                    transaction_main = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output(script_pub_key, value)], datetime.now(), 'MAIN')
-                    verified = transaction_main.verify(transaction_to_spend, self.unspent)
+                    transaction_main = Transaction(None,inputs,[Transaction_Output(script_pub_key, value)], datetime.now(), 'MAIN')
+
+                    if isinstance(transaction_to_spend, list):
+                        count = 0
+                        for transaction in transaction_to_spend:
+                            verified = transaction_main.verify(transaction, self.unspent, count)
+                            count += 1
+                            if verified == False:
+                                break
+                    else:
+                        verified = transaction_main.verify(transaction_to_spend, self.unspent, 0)
+
                     if verified == True:
                         self.transaction_pool.add(transaction_main)
                         prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
@@ -216,9 +233,17 @@ class Node:
                         
 
                         # Change Transaction
-                        remaining = transaction_to_spend.outputs[0].value - value - transaction_fee
-                        t = Transaction(None,[Transaction_Input(transaction_hash, output_id, script_sig)],[Transaction_Output("P2PK:" + self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
-                        t.verify(transaction_to_spend, self.unspent)
+                        remaining = to_spend_value - value - transaction_fee
+                        t = Transaction(None,inputs,[Transaction_Output("P2PK:" + self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
+                        if isinstance(transaction_to_spend, list):
+                            count = 0
+                            for transaction in transaction_to_spend:
+                                verified = t.verify(transaction, self.unspent, count)
+                                count += 1
+                                if verified == False:
+                                    break
+                        else:
+                            verified = t.verify(transaction_to_spend, self.unspent, 0)
                         self.transaction_pool.add(t)
                         prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                         self.transaction_messages.append(prefixed_message)
@@ -226,7 +251,7 @@ class Node:
 
 
                         # Fee Transaction
-                        t = Transaction(None,[Transaction_Input(transaction_hash, output_id, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
+                        t = Transaction(None,[Transaction_Input(transaction_hash, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
                         self.transaction_pool.add(t)
                         prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                         self.transaction_messages.append(prefixed_message)
@@ -236,7 +261,7 @@ class Node:
         
 
             elif choice == 'G':
-                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 0, 'None')], [Transaction_Output("P2PK:" + self.pub_key_str, 100)], datetime.now(), 'GEN')
+                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 'None')], [Transaction_Output("P2PK:" + self.pub_key_str, 100)], datetime.now(), 'GEN')
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
@@ -317,15 +342,9 @@ class Node:
         self.utxo()
         tried = False
         while tried == False:
-            try:
-                script_choice = input('How do you want to send your coins?\n\t"P2PK" to pay to pub_key\n\t"P2PKS" to pay to pub_key with a checksum: ')
-                if script_choice == "P2PK" or script_choice == "P2PKS":
-                    pass
-                else:
-                    print('Not a valid choice')
-                    tried == False
-                    continue
-                transaction_to_spend = None
+            # try:
+            script_choice = input('How do you want to send your coins?\n\t"P2PK" to pay to pub_key\n\t"P2PKS" to pay to pub_key with a checksum\n\t"MULTIP2PK" to pay multiple transactions to pub_key: ')
+            if script_choice == "P2PK" or script_choice == "P2PKS":
                 while transaction_to_spend == None:
                     counter = 1
                     print("Unspent Transactions:")
@@ -339,39 +358,79 @@ class Node:
                     else:
                         transaction_to_spend = None
                         print("Not an option")
+            
+            elif script_choice == "MULTIP2PK":
+                transaction_to_spend = []
                 
-                script_pub_key = input('Enter the public key of the desired recipient: ')
+                while transaction_to_spend == []:
+                    to_spend_value = 0
+                    print("Select a transction to spend by typing the number next to it, when you have selected all the transactions you want to use, enter 'x'")
+                    print('Unspent Transactions:')
+                    counter = 1
+                    for transaction in self.my_unspent:
+                        print(counter, '.\t', transaction.to_json_complete())
+                        counter += 1
+                    
+                    completed = False
+                    while completed == False:
+                        print('Current amount to spend:', to_spend_value)
+                        transaction_choice = input('Choose your transaction to spend: ')
+                    
+                        if transaction_choice == 'x':
+                            if len(transaction_to_spend) == 0:
+                                print('Please select at least 1 transaction to spend')
+                            else:
+                                completed = True
+                        
+                        else:
+                            transaction_choice = int(transaction_choice)
+                            if transaction_choice in range(1, len(self.my_unspent)+1):
+                                transaction_choice_t = self.my_unspent[transaction_choice - 1]
+                                if transaction_choice_t in transaction_to_spend:
+                                    print('Please pick a transaction you have not already selected')
+                                else:
+                                    transaction_to_spend.append(transaction_choice_t)
+                                    to_spend_value += transaction_choice_t.outputs[0].value
+                                    print(transaction_to_spend)
+                                    print(transaction_choice_t.to_json_complete())
 
-                if script_choice == "P2PKS":
-                    if self.check_addr(script_pub_key) == True:
+
+            else:
+                print('Not a valid choice')
+                tried == False
+                continue
+            
+            
+            script_pub_key = input('Enter the public key of the desired recipient: ')
+
+            if script_choice == "P2PKS":
+                if self.check_addr(script_pub_key) == True:
+                    pass
+                else:
+                    print('Secure key not valid')
+                    continue
+
+            script_pub_key = script_choice + ':' + script_pub_key
+            
+            value = None
+            while value == None:
+                value = int(input("Amount to spend (Transaction amount: "+str(to_spend_value) +"): "))
+                if value < to_spend_value and value > 0:
+                    transaction_fee = int(input("Transaction fee: "))
+                    if transaction_fee > 0 and (transaction_fee + value) < to_spend_value:
+                        tried = True
                         pass
                     else:
-                        print('Secure key not valid')
-                        continue
-
-                script_pub_key = script_choice + ':' + script_pub_key
-
-                # validate checksum
-                
-                value = None
-                while value == None:
-                    value = int(input("Amount to spend (Transaction amount: "+str(to_spend_value) +"): "))
-                    if value < to_spend_value and value > 0:
-                        transaction_fee = int(input("Transaction fee: "))
-                        if transaction_fee > 0 and (transaction_fee + value) < to_spend_value:
-                            tried = True
-                            pass
-                        else:
-                            value = None
-                            
-                    else:
                         value = None
-                        print('incorrect value')
-            except:
-                print('Incorrect details')
-                tried = False
+                        
+                else:
+                    value = None
+                    print('incorrect value')
+            # except:
+            #     print('Incorrect details')
+            #     tried = False
         
-        return transaction_to_spend, script_pub_key, value, transaction_fee
+        return transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value
 
     #### UTILITY FUNCTIONS ####
 
@@ -432,9 +491,14 @@ class Node:
             else:
                 if transaction.type == "MAIN":
                     # remove spent transaction
+                    spent_array = []
                     for spent in unspent:
-                        if spent.hash == transaction.inputs[0].transaction_hash:
-                            unspent.remove(spent)
+                        for input in transaction.inputs:
+                            if spent.hash == input.transaction_hash:
+                                spent_array.append(spent)
+                    
+                    for spent in spent_array:
+                        unspent.remove(spent)
 
                     # add main transaction
                     unspent.append(transaction)
@@ -449,7 +513,7 @@ class Node:
 
             out_key_array = transaction_key.split(':')
 
-            if out_key_array[0] == "P2PK":
+            if out_key_array[0] == "P2PK" or out_key_array[0] == "MULTIP2PK":
                 output_key = out_key_array[1]
             
             if out_key_array[0] == "P2PKS":
