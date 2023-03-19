@@ -1,5 +1,8 @@
 from tkinter import *
+from datetime import datetime
+
 from Node import Node
+
 
 
 class Gui:
@@ -101,36 +104,52 @@ class Gui:
         port_out = Label(self.home_frame, text= self.node.port)
         port_out.grid(row=0, column=1)
 
-        peers_lable = Label(self.home_frame, text='Peer ports')
-        peers_lable.grid(row=3, column=0)
+        acount_balance = Label(self.home_frame, text='Acount Balance:')
+        acount_balance.grid(row=1, column=0)
+        acount_balance_out = Label(self.home_frame, text= self.node.balance)
+        acount_balance_out.grid(row=1, column=1)
+
+        peers_lable = Label(self.home_frame, text='Peer ports:')
+        peers_lable.grid(row=4, column=0)
         peers_out = Label(self.home_frame, text= self.node.peer_ports)
-        peers_out.grid(row=3, column=1)
+        peers_out.grid(row=4, column=1)
 
         pk_lable = Label(self.home_frame, text='Public Key:')
-        pk_lable.grid(row=1, column=0)
+        pk_lable.grid(row=2, column=0)
         pk_out = Text(self.home_frame, width= 50, height=4)
         pk_out.insert(1.0, self.node.pub_key_str)
-        pk_out.grid(row=1, column=1)
+        pk_out.grid(row=2, column=1)
 
         pks_lable = Label(self.home_frame, text='Secure Public Key:')
-        pks_lable.grid(row=2, column=0)
+        pks_lable.grid(row=3, column=0)
         pks_out = Text(self.home_frame, width=50, height=2)
         pks_out.insert(1.0, self.node.pub_to_addr(self.node.pub_key_str))
-        pks_out.grid(row=2, column=1)
+        pks_out.grid(row=3, column=1)
 
         opt_label = Label(self.home_frame, text='Mining:')
-        opt_label.grid(row=4, column=0)
+        opt_label.grid(row=5, column=0)
 
         if self.node.mining == True:
             btn_text = 'ON'
-        elif self.node.eligible == False:
+        elif self.node.mining == False:
             btn_text = 'OFF'
         
-        self.opt_but = Button(self.home_frame, text=btn_text, width= 2)
-        if self.node.eligible == False:
-            self.opt_but['state'] = DISABLED
-        self.opt_but['command'] = lambda: self.flip_opt(self.opt_but, None)
-        self.opt_but.grid(row=4, column=1)
+        if self.node.eligible == True: 
+            self.opt_but = Button(self.home_frame, text=btn_text, width= 2)
+            self.opt_but['command'] = lambda: self.flip_opt(self.opt_but, None)
+            self.opt_but.grid(row=5, column=1)
+
+        elif self.node.eligible == False:
+            port_out = Label(self.home_frame, text= 'Please wait until the next round to interact with the network')
+            port_out.grid(row=5, column=1)
+
+        time_lable = Label(self.home_frame, text='Time until next round:')
+        time_lable.grid(row=6, column=0)
+        time_out = Label(self.home_frame, text= self.node.time_for_next_round - datetime.now())
+        time_out.grid(row=6, column=1)
+        
+
+
 
 
 
@@ -141,6 +160,9 @@ class Gui:
     def delete_frame(self):
         for button in self.menu_buttons:
             button['state'] = NORMAL
+        if self.node.eligible == False:
+            self.transactions['state'] = DISABLED
+            self.attacks['state'] = DISABLED
         self.open_frame.destroy()
 
     def flip_opt(self, button, widg):
@@ -153,8 +175,10 @@ class Gui:
 
         elif button['text'] == 'ON':
             button['text'] = 'OFF'
+            self.node.mining = False
         elif button['text'] == 'OFF':
             button['text'] = 'ON'
+            self.node.mining = True
 
 
 Gui()

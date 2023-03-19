@@ -24,6 +24,7 @@ class Node:
         self.transaction_messages = []
         self.peer_ports = []
         self.peer_dict = {}
+        self.balance = 0
 
         self.generate_keys()
         self.transaction_pool = Transaction_Pool(self.pub_key_str)
@@ -42,6 +43,7 @@ class Node:
             self.time_for_next_round =  dt + timedelta(0,60)
             self.eligible = True
             self.mining = True
+        
 
         # for mining
         self.block_found = False 
