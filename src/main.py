@@ -116,6 +116,7 @@ class Gui:
     #### HOME FRAME ####
 
     def home_op(self):
+        self.node.utxo()
         self.delete_frame()
 
         self.home_frame = LabelFrame(self.second_frame, pady=10)
@@ -256,7 +257,7 @@ class Gui:
         restart_button = Button(self.c_transaction_frame, text = 'Restart', command=self.c_transaction_op)
         restart_button.grid(row=3, column=1, sticky=W)
         
-        confirm_button = Button(self.c_transaction_frame, text = 'Confirm', command=self.d_transaction_op)
+        confirm_button = Button(self.c_transaction_frame, text = 'Confirm', command=lambda: self.d_transaction_op(self.choice['text']))
         confirm_button.grid(row=3, column=2, sticky=W)
 
 
@@ -267,9 +268,9 @@ class Gui:
             self.t_btns.append(t_btn)
         
     #### DETAILS FRAME ####
-    def d_transaction_op(self):
+    def d_transaction_op(self, choice):
         self.delete_frame()
-
+        self.choice = choice
         self.d_transaction_frame = LabelFrame(self.second_frame, text='Details')
         self.d_transaction_frame.pack(fill= BOTH, expand = 1, anchor=N)
 
@@ -285,18 +286,18 @@ class Gui:
         fee_entr = Entry(self.d_transaction_frame)
 
         addr_lbl = Label(self.d_transaction_frame, text = 'Recipient address:')
-        addr_entr = Text(self.d_transaction_frame, width= 50, height=4)
+        addr_entr = Entry(self.d_transaction_frame)
 
         to_spend_lbl.grid(row=0, column=0, columnspan=3)
         val_lbl.grid(row=1, column=0)
         val_entr.grid(row=1, column=1, columnspan=2, sticky=E)
-        fee_lbl.grid(row=2, column=0, columnspan= 2)
+        fee_lbl.grid(row=2, column=0, columnspan= 2, sticky= W)
         fee_entr.grid(row=2, column=2, sticky=E)
         addr_lbl.grid(row=3, column=0)
         addr_entr.grid(row=3, column=1, columnspan=2)
 
         clear_button = Button(self.d_transaction_frame, text='Clear', command=self.d_transaction_op)
-        confirm_button = Button(self.d_transaction_frame, text='Confirm', command= lambda: self.transaction_details(addr_entr.get("1.0", END), val_entr.get(), fee_entr.get()))
+        confirm_button = Button(self.d_transaction_frame, text='Confirm', command= lambda: self.transaction_details(addr_entr.get(), val_entr.get(), fee_entr.get()))
 
         clear_button.grid(row=4, column=1)
         confirm_button.grid(row=4, column=2)
@@ -384,7 +385,7 @@ class Gui:
             self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
 
     def transaction_details(self, script_public_key, value, transaction_fee):
-        self.node.transaction_maker(self.transactions_to_send, script_public_key, int(value), int(transaction_fee), int(self.to_spend_value))
+        self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+script_public_key), int(value), int(transaction_fee), int(self.to_spend_value))
 
 
 Gui()

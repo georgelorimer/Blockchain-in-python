@@ -507,8 +507,10 @@ class Node:
             prefixed_message="TRANSACTION:" + str(t.to_json_complete())
             self.transaction_messages.append(prefixed_message)
             self.send_message(prefixed_message)
+            return True
         else:
             print("Transaction not verified")
+            return False
 
     #### UTILITY FUNCTIONS ####
 
@@ -559,54 +561,60 @@ class Node:
 
 
     def utxo(self):
+        while not self.blockchain:
+            pass
+
         # list of all transactions in blockchain and transaction pool - genesis block
         all_transactions = self.blockchain.return_transactions() + self.transaction_pool.from_json_transactions()
-        unspent = []
+        if len(all_transactions) == 0:
+            pass
+        else:
+            unspent = []
 
-        for transaction in all_transactions:
-            if transaction.type == "GEN" or transaction.type == 'COINBASE' or transaction.type == 'CHANGE':
-                unspent.append(transaction)
-            else:
-                if transaction.type == "MAIN":
-                    # remove spent transaction
-                    spent_array = []
-                    for spent in unspent:
-                        for input in transaction.inputs:
-                            if spent.hash == input.transaction_hash:
-                                spent_array.append(spent)
-                    
-                    for spent in spent_array:
-                        unspent.remove(spent)
-
-                    # add main transaction
+            for transaction in all_transactions:
+                if transaction.type == "GEN" or transaction.type == 'COINBASE' or transaction.type == 'CHANGE':
                     unspent.append(transaction)
-        
-        my_unspent = []
-        balance = 0
+                else:
+                    if transaction.type == "MAIN":
+                        # remove spent transaction
+                        spent_array = []
+                        for spent in unspent:
+                            for input in transaction.inputs:
+                                if spent.hash == input.transaction_hash:
+                                    spent_array.append(spent)
+                        
+                        for spent in spent_array:
+                            unspent.remove(spent)
 
-
-        for transaction in unspent:
-            output_key = None
-            transaction_key = transaction.outputs[0].script_pub_key
-
-            out_key_array = transaction_key.split(':')
-
-            if out_key_array[0] == "P2PK" or out_key_array[0] == "MULTIP2PK":
-                output_key = out_key_array[1]
+                        # add main transaction
+                        unspent.append(transaction)
             
-            if out_key_array[0] == "P2PKS":
-                if self.check_addr(out_key_array[1]) == False:
-                    print('Secure key not valid')
-                output_key = self.addr_to_pub(out_key_array[1])
+            my_unspent = []
+            balance = 0
 
-            if output_key == self.pub_key_str:
-                my_unspent.append(transaction)
-                balance += transaction.outputs[0].value
-        
 
-        self.unspent = unspent
-        self.my_unspent = my_unspent
-        self.balance = balance
+            for transaction in unspent:
+                output_key = None
+                transaction_key = transaction.outputs[0].script_pub_key
+
+                out_key_array = transaction_key.split(':')
+
+                if out_key_array[0] == "P2PK" or out_key_array[0] == "MULTIP2PK":
+                    output_key = out_key_array[1]
+                
+                if out_key_array[0] == "P2PKS":
+                    if self.check_addr(out_key_array[1]) == False:
+                        print('Secure key not valid')
+                    output_key = self.addr_to_pub(out_key_array[1])
+
+                if output_key == self.pub_key_str:
+                    my_unspent.append(transaction)
+                    balance += transaction.outputs[0].value
+            
+
+            self.unspent = unspent
+            self.my_unspent = my_unspent
+            self.balance = balance
 
     #### KEY SECURE FUNCTIONS 
     def pub_to_addr(self, key):
