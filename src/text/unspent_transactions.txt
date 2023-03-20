@@ -1,0 +1,14 @@
+Unspent Transactions:
+------------------------------------------------------------------------------
+Transaction 1: 
+Transaction: 55f41e10afedc4adb8fa6938d1f5490f7b8788923d54e072bb31b877ab8e8405
+Value: 40
+Timestamp: 2023-03-20 18:34:50.169504
+Type: CHANGE
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Inputs: 
+1.	Input Hash: 9cc5ca4c41e93dd9da6565d0669c3a854497ffc8da7080789def737d73dc552b
+	Script Signature: b'\xe3\x95\x06$p\xf3x\xae4\xe8\xe8\x9ca\xf6e=\xb7FB\xfa_."\xe9\xe4\xcc\xdc\xd2\x14\xdeq\xd0@\x94\xa5\xc8\xbc\xe0fY\x01[V\x02\x9b\xbaS\xcc\xe1\xbc\xab\x06\xba\x9a\xbe\xc7\x87\xbe\xff\xe5\xc7&\x14\x0e'
+Output:
+	Script Pub Key: P2PK:29402987841135607467486428878573770315731085610845025583845104719598551955017+49420477291440603448211510473463862700973283196052654173004694448814428661442
+	Value: 40

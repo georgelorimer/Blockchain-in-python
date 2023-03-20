@@ -385,7 +385,21 @@ class Gui:
             self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
 
     def transaction_details(self, script_public_key, value, transaction_fee):
-        self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+script_public_key), int(value), int(transaction_fee), int(self.to_spend_value))
+        success = self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+script_public_key), int(value), int(transaction_fee), int(self.to_spend_value))
+        self.delete_frame()
+        self.success_frame = Frame(self.second_frame, pady=10)
+        self.success_frame.pack(fill= BOTH, expand = 1)
+
+        self.open_frame = self.success_frame
+
+        if success == True:
+            message = 'Transaction Succesful, you sent '+value+' Greckles!'
+        else:
+            message = 'Something went wrong, please try again.'
+        
+        Label(self.success_frame, text=message).pack()
+
+        Button(self.success_frame, text='Continue', command=self.home_op).pack()
 
 
 Gui()
