@@ -23,7 +23,7 @@ class Gui:
         self.transactions = Button(self.root, text='Transactions', state=DISABLED, command=self.transaction_op)
         self.menu_buttons.append(self.transactions)
 
-        self.block_explorer = Button(self.root, text='Block Explorer', state=DISABLED)
+        self.block_explorer = Button(self.root, text='Block Explorer', state=DISABLED, command=self.be_op)
         self.menu_buttons.append(self.block_explorer)
 
         self.attacks = Button(self.root, text='Attacks', state=DISABLED)
@@ -119,7 +119,7 @@ class Gui:
         self.node.utxo()
         self.delete_frame()
 
-        self.home_frame = LabelFrame(self.second_frame, pady=10)
+        self.home_frame = Frame(self.second_frame, pady=10)
         self.home_frame.pack(fill= BOTH, expand = 1, side=TOP)
 
         self.open_frame = self.home_frame
@@ -179,7 +179,7 @@ class Gui:
     def transaction_op(self):
         self.delete_frame()
 
-        self.transaction_frame = LabelFrame(self.second_frame, pady=10)
+        self.transaction_frame = Frame(self.second_frame, pady=10)
         self.transaction_frame.pack(fill= BOTH, expand = 1, side=TOP)
 
         self.open_frame = self.transaction_frame
@@ -227,13 +227,13 @@ class Gui:
 
     def c_transaction_op(self):
         self.node.utxo()
-        self.my_unspent = self.node.my_unspent
+        self.my_unspent = self.node.my_unspent.copy()
         self.to_spend_value = 0
         self.transactions_to_send = []
 
         self.delete_frame()
 
-        self.c_transaction_frame = LabelFrame(self.second_frame)
+        self.c_transaction_frame = Frame(self.second_frame)
         self.c_transaction_frame.pack(fill= BOTH, expand = 1, anchor=N)
 
         self.open_frame = self.c_transaction_frame
@@ -262,8 +262,10 @@ class Gui:
 
 
         self.t_btns = []
-        for i in range(len(self.node.my_unspent)):
-            t_btn = Button(self.c_transaction_frame, text = 'Hash: '+self.node.my_unspent[i].hash[:40] + '...| Value: '+ str(self.node.my_unspent[i].outputs[0].value), width=50, command= lambda i=i: self.select_transaction(i))
+        my_unspent = self.node.my_unspent.copy()
+        for i in range(len(my_unspent)):
+            
+            t_btn = Button(self.c_transaction_frame, text = 'Hash: '+my_unspent[i].hash[:40] + '...| Value: '+ str(my_unspent[i].outputs[0].value), width=50, command= lambda i=i: self.select_transaction(i))
             t_btn.grid(row=4+i, column=0, columnspan= 3)
             self.t_btns.append(t_btn)
         
@@ -271,7 +273,7 @@ class Gui:
     def d_transaction_op(self, choice):
         self.delete_frame()
         self.choice = choice
-        self.d_transaction_frame = LabelFrame(self.second_frame, text='Details')
+        self.d_transaction_frame = Frame(self.second_frame)
         self.d_transaction_frame.pack(fill= BOTH, expand = 1, anchor=N)
 
         self.open_frame = self.d_transaction_frame
@@ -303,7 +305,29 @@ class Gui:
         confirm_button.grid(row=4, column=2)
 
 
+    #### BLOCK EXPLORER FRAME ###
+    def be_op(self):
+        self.delete_frame()
+        self.be_frame = Frame(self.second_frame)
+        self.be_frame.pack(fill= BOTH, expand = 1, anchor=N)
 
+        self.open_frame = self.be_frame
+
+        blockchain = self.node.blockchain.blockchain.copy()
+        blockchain.reverse()
+
+        Label(self.be_frame, text= 'Blockchain Explorer').pack()
+
+        self.b_btns = []
+        
+        for i in range(len(blockchain)):
+            if i != 0:
+                Label(self.be_frame, text='^').pack()
+            dt =  blockchain[i].time
+            time = str(dt[2]) + '/' + str(dt[1]) + '/' + str(dt[0]) + '-' + str(dt[3]) + ':' + str(dt[4]) +':'+ str(dt[5])
+            b_btn = Button(self.be_frame, text = 'Hash: '+blockchain[i].block_hash[:20] + '...| Time Stamp: '+ time, width=50) #, command= lambda i=i: self.select_block(i))
+            b_btn.pack()
+            self.b_btns.append(b_btn)
 
 
 
@@ -311,7 +335,7 @@ class Gui:
     def other_op(self):
         self.delete_frame()
 
-        self.other_frame = LabelFrame(self.second_frame, pady=10)
+        self.other_frame = Frame(self.second_frame, pady=10)
         self.other_frame.pack(fill= BOTH, expand = 1)
 
         self.open_frame = self.other_frame
