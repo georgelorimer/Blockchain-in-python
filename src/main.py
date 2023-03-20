@@ -191,7 +191,7 @@ class Gui:
         p1 = Label(self.transaction_frame, text='      ')
         p1.grid(row=0, column=3)
 
-        unspent_btn = Button(self.transaction_frame, text= 'Unspent transactions')
+        unspent_btn = Button(self.transaction_frame, text= 'Unspent transactions', command=self.node.unspent_to_txt)
         unspent_btn.grid(row=1, column=1)
 
         unspent_btn = Button(self.transaction_frame, text= 'Create a transaction')
@@ -222,10 +222,17 @@ class Gui:
             view_transaction.grid(row=6, column=2, sticky=E)
 
 
+    #### CREATE TRANSACTIONS ####
 
+    def c_transaction_op(self):
+        self.delete_frame()
 
-    #### UNSPENT TRANSACTIONS ####
-    
+        self.c_transaction_frame = LabelFrame(self.second_frame, pady=10)
+        self.c_transaction_frame.pack(fill= BOTH, expand = 1, side=TOP)
+
+        self.open_frame = self.c_transaction_frame
+
+        
 
 
     #### OTHER FRAME ####

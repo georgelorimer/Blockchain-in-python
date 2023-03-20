@@ -179,14 +179,18 @@ class Transaction:
 
 
     def to_txt(self):
+        try:
+            os.remove('text/transaction_file.txt')
+        except:
+            pass
         text = self.txt_format()
-        file = open('transaction_file.txt', 'w')
+        file = open('text/transaction_file.txt', 'w')
         file.write(text)
         file.close()
-        os.system('open -t transaction_file.txt')
+        os.system('open -t text/transaction_file.txt')
     
     def txt_format(self):
-        text= 'Transaction: '+ self.hash + '\n'+'Value: '+ str(self.outputs[0].value)+ '\n'+'Timestamp: '+ str(self.timestamp)+ '\n'+'Type: '+ self.type+ '\n\nInputs: '
+        text= 'Transaction: '+ self.hash + '\n'+'Value: '+ str(self.outputs[0].value)+ '\n'+'Timestamp: '+ str(self.timestamp)+ '\n'+'Type: '+self.type+ '\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n'+'Inputs: '
 
         for i in range (len(self.inputs)):
             text = text+'\n'+ str(i+1)+'.' + self.inputs[i].to_txt_format()

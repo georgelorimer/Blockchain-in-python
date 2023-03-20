@@ -1,5 +1,6 @@
 import socket
 import threading
+import os
 from datetime import timedelta, datetime
 
 from Crypto.PublicKey import ECC
@@ -593,3 +594,18 @@ class Node:
         return pub_key_str
 
 
+    def unspent_to_txt(self):
+        try:
+            os.remove('text/unspent_transactions.txt')
+        except:
+            pass
+        self.utxo()
+        file = open('text/unspent_transactions.txt', 'w')
+        file.write('Unspent Transactions:')
+        for i in range(len(self.my_unspent)):
+            file.write('\n------------------------------------------------------------------------------\n')
+            file.write('Transaction '+ str(i+1)+ ': \n')
+            file.write(self.my_unspent[i].txt_format())
+
+        file.close()
+        os.system('open -t text/unspent_transactions.txt')
