@@ -108,7 +108,7 @@ class Gui:
         self.main_canvas.bind('<Configure>', lambda e: self.main_canvas.configure(scrollregion= self.main_canvas.bbox("all")))
 
         self.second_frame = Frame(self.main_canvas)
-        self.main_canvas.create_window((0,0), window=self.second_frame, anchor='nw')
+        self.main_canvas.create_window((0,0), window=self.second_frame, anchor=CENTER)
 
 
 
@@ -194,7 +194,7 @@ class Gui:
         unspent_btn = Button(self.transaction_frame, text= 'Unspent transactions', command=self.node.unspent_to_txt)
         unspent_btn.grid(row=1, column=1)
 
-        unspent_btn = Button(self.transaction_frame, text= 'Create a transaction')
+        unspent_btn = Button(self.transaction_frame, text= 'Create a transaction', command=self.c_transaction_op)
         unspent_btn.grid(row=1, column=2)
 
         lt_lable = Label(self.transaction_frame, text='Last Transaction:', padx=10, pady=10)
@@ -228,11 +228,30 @@ class Gui:
         self.delete_frame()
 
         self.c_transaction_frame = LabelFrame(self.second_frame, pady=10)
-        self.c_transaction_frame.pack(fill= BOTH, expand = 1, side=TOP)
+        self.c_transaction_frame.pack(fill= BOTH, expand = 1, anchor=CENTER)
 
         self.open_frame = self.c_transaction_frame
-
         
+        choice_label = Label(self.c_transaction_frame, text='Scripting Option:')
+        choice_label.grid(row=0, column=0)
+        self.choice = Button(self.c_transaction_frame, text= 'P2PK', command=self.flip_choice)
+        self.choice.grid(row=0, column=1)
+        self.info = Label(self.c_transaction_frame,  text='Send to public key')
+        self.info.grid(row=1, column=0, columnspan=2)
+
+        self.unspent_label = Label(self.c_transaction_frame, text='Please select a transaction:')
+        self.unspent_label.grid(row=2, column=0, columnspan= 2)
+
+        self.node.utxo()
+
+        t_btns = []
+        for i in range(len(self.node.my_unspent)):
+            t_btn = Button(self.c_transaction_frame, text = 'Hash: '+self.node.my_unspent[i].hash[:40] + '...| Value: '+ str(self.node.my_unspent[i].outputs[0].value), width=50)
+            t_btn.grid(row=3+i, column=0, columnspan= 2)
+            t_btns.append(t_btn)
+
+
+
 
 
     #### OTHER FRAME ####
@@ -274,6 +293,20 @@ class Gui:
         elif button['text'] == 'OFF':
             button['text'] = 'ON'
             self.node.mining = True
+    
+    def flip_choice(self):
+        if self.choice['text'] == 'P2PK':
+            self.choice['text'] = 'P2PKS'
+            self.unspent_label['text'] = 'Please select a transaction'
+            self.info['text'] = 'Send to secure public key:'
+        elif self.choice['text'] == 'P2PKS':
+            self.choice['text'] = 'MULTIP2PK'
+            self.info['text'] = 'Send multiple transactions to public key'
+            self.unspent_label['text'] = 'Select transaction multiple transaction:'
+        elif self.choice['text'] == 'MULTIP2PK':
+            self.choice['text'] = 'P2PK'
+            self.info['text'] = 'Send to public key'
+            self.unspent_label['text'] = 'Please select a transaction:'
 
 
 Gui()
