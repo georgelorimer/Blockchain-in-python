@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import ttk
 from datetime import datetime
 
 from Node import Node
@@ -11,13 +12,15 @@ class Gui:
         self.open_frame = None
 
         self.root = Tk()
+        self.root.geometry('550x300')
+        self.root.rowconfigure(1,weight=50)
         self.root.title("Greckle Wallet")
         self.menu_buttons = []
 
         self.home = Button(self.root, text='Home', state=DISABLED, command=self.home_op)
         self.menu_buttons.append(self.home)
 
-        self.transactions = Button(self.root, text='Transactions', state=DISABLED)
+        self.transactions = Button(self.root, text='Transactions', state=DISABLED, command=self.transaction_op)
         self.menu_buttons.append(self.transactions)
 
         self.block_explorer = Button(self.root, text='Block Explorer', state=DISABLED)
@@ -26,7 +29,7 @@ class Gui:
         self.attacks = Button(self.root, text='Attacks', state=DISABLED)
         self.menu_buttons.append(self.attacks)
 
-        self.other = Button(self.root, text='Other', state=DISABLED)
+        self.other = Button(self.root, text='Other', state=DISABLED, command=self.other_op)
         self.menu_buttons.append(self.other)
 
         self.manual = Button(self.root, text='Manual', state=DISABLED)
@@ -49,7 +52,7 @@ class Gui:
 
     def enter(self):
         self.login_frame = LabelFrame(self.root, text = 'Connect')
-        self.login_frame.grid(row=1, column= 0,columnspan=6, padx=10, pady = 10)
+        self.login_frame.grid(row=1, column= 0,columnspan=6)
 
         self.open_frame = self.login_frame
 
@@ -86,7 +89,28 @@ class Gui:
             peer = None
         
         self.node = Node(int(port),peer)
+
+        self.main_frame_open()
         self.home_op()
+
+
+    #### MAIN FRAME ####
+    def main_frame_open(self):
+        self.main_frame = Frame(self.root, pady=10, padx=10)
+        self.main_frame.grid(row=1, columnspan=6, sticky= 'nsew')
+        self.main_canvas = Canvas(self.main_frame)
+        self.main_canvas.pack(side=LEFT, fill= BOTH, expand=1)
+
+        self.main_scrollbar = ttk.Scrollbar(self.main_frame, orient=VERTICAL, command=self.main_canvas.yview)
+        self.main_scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.main_canvas.configure(yscrollcommand=self.main_scrollbar.set)
+        self.main_canvas.bind('<Configure>', lambda e: self.main_canvas.configure(scrollregion= self.main_canvas.bbox("all")))
+
+        self.second_frame = Frame(self.main_canvas)
+        self.main_canvas.create_window((0,0), window=self.second_frame, anchor='nw')
+
+
 
 
     #### HOME FRAME ####
@@ -94,8 +118,8 @@ class Gui:
     def home_op(self):
         self.delete_frame()
 
-        self.home_frame = LabelFrame(self.root)
-        self.home_frame.grid(row=1, column= 0,columnspan=6, padx=10, pady = 10)
+        self.home_frame = LabelFrame(self.second_frame, pady=10)
+        self.home_frame.pack(fill= BOTH, expand = 1, side=TOP)
 
         self.open_frame = self.home_frame
 
@@ -149,8 +173,72 @@ class Gui:
         time_out.grid(row=6, column=1)
         
 
+    #### TRANSACTION FRAME ####
+
+    def transaction_op(self):
+        self.delete_frame()
+
+        self.transaction_frame = LabelFrame(self.second_frame, pady=10)
+        self.transaction_frame.pack(fill= BOTH, expand = 1, side=TOP)
+
+        self.open_frame = self.transaction_frame
+
+        acount_balance = Label(self.transaction_frame, text='Acount Balance:', padx=40, pady=10)
+        acount_balance.grid(row=0, column=1)
+        acount_balance_out = Label(self.transaction_frame, text= self.node.balance, padx=40, pady=10)
+        acount_balance_out.grid(row=0, column=2)
+
+        p1 = Label(self.transaction_frame, text='      ')
+        p1.grid(row=0, column=3)
+
+        unspent_btn = Button(self.transaction_frame, text= 'Unspent transactions')
+        unspent_btn.grid(row=1, column=1)
+
+        unspent_btn = Button(self.transaction_frame, text= 'Create a transaction')
+        unspent_btn.grid(row=1, column=2)
+
+        lt_lable = Label(self.transaction_frame, text='Last Transaction:', padx=10, pady=10)
+        lt_lable.grid(row=2, column=0)
+        if self.node.last_transaction != None:
+            lt_out = Label(self.transaction_frame, text= self.node.last_transaction.hash[:40] + '...')
+            lt_out.grid(row=2, column=1, columnspan=3)
+
+            val = Label(self.transaction_frame, text='Value:')
+            val_out = Label(self.transaction_frame, text= self.node.last_transaction.outputs[0].value)
+            val.grid(row=3, column=0)
+            val_out.grid(row=3, column=1, columnspan=3)
+
+            tim = Label(self.transaction_frame, text='Time Stamp:')
+            tim_out = Label(self.transaction_frame, text= self.node.last_transaction.timestamp)
+            tim.grid(row=4, column=0)
+            tim_out.grid(row=4, column=1, columnspan=3)
+            
+            type = Label(self.transaction_frame, text='Type:')
+            type_out = Label(self.transaction_frame, text= self.node.last_transaction.type)
+            type.grid(row=5, column=0)
+            type_out.grid(row=5, column=1, columnspan=3)
+            
+            view_transaction = Button(self.transaction_frame, text= 'View Transaction', command= self.node.last_transaction.to_txt)
+            view_transaction.grid(row=6, column=2, sticky=E)
 
 
+
+
+    #### UNSPENT TRANSACTIONS ####
+    
+
+
+    #### OTHER FRAME ####
+    def other_op(self):
+        self.delete_frame()
+
+        self.other_frame = LabelFrame(self.second_frame, pady=10)
+        self.other_frame.pack(fill= BOTH, expand = 1)
+
+        self.open_frame = self.other_frame
+
+        gen = Button(self.other_frame, text= 'Generate Coins', command= self.node.gen_coins)
+        gen.pack()
 
 
 

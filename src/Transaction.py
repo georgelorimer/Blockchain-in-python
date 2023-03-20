@@ -3,6 +3,7 @@ from typing import List
 from datetime import datetime
 from collections import namedtuple
 from hashlib import sha256
+import os
 
 
 from Crypto.PublicKey import ECC
@@ -22,6 +23,8 @@ class Transaction_Input(namedtuple("Transaction_Input", ["transaction_hash", "sc
             'transaction_hash': self.transaction_hash,
             'script_sig': self.script_sig
         }
+    def to_txt_format(self):
+        return '\tInput Hash: '+ self.transaction_hash+'\n\tScript Signature: '+ self.script_sig
 
 
 class Transaction_Output(namedtuple("Transaction_Output", ["script_pub_key", "value"])):
@@ -37,6 +40,9 @@ class Transaction_Output(namedtuple("Transaction_Output", ["script_pub_key", "va
             'script_pub_key': self.script_pub_key,
             'value': self.value
         }
+    
+    def to_txt_format(self):
+        return '\n\tScript Pub Key: '+ self.script_pub_key+'\n\tValue: '+ str(self.value)
 
     
 class Transaction:
@@ -147,10 +153,6 @@ class Transaction:
 
 
 
-
-
-
-
     def check_addr(self, addr):
         addr_split= addr.split('+')
 
@@ -174,3 +176,21 @@ class Transaction:
         pub_key_str = str(x) + "+" +str(y)
 
         return pub_key_str
+
+
+    def to_txt(self):
+        text = self.txt_format()
+        file = open('transaction_file.txt', 'w')
+        file.write(text)
+        file.close()
+        os.system('open -t transaction_file.txt')
+    
+    def txt_format(self):
+        text= 'Transaction: '+ self.hash + '\n'+'Value: '+ str(self.outputs[0].value)+ '\n'+'Timestamp: '+ str(self.timestamp)+ '\n'+'Type: '+ self.type+ '\n\nInputs: '
+
+        for i in range (len(self.inputs)):
+            text = text+'\n'+ str(i+1)+'.' + self.inputs[i].to_txt_format()
+        
+        text = text + '\nOutput:'+ self.outputs[0].to_txt_format()
+
+        return text

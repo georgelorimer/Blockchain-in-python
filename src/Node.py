@@ -25,6 +25,7 @@ class Node:
         self.peer_ports = []
         self.peer_dict = {}
         self.balance = 0
+        self.last_transaction = None
 
         self.generate_keys()
         self.transaction_pool = Transaction_Pool(self.pub_key_str)
@@ -106,6 +107,9 @@ class Node:
 
                     transaction_dict = eval(str_array[1])
                     transaction = Transaction.from_json_compatible(transaction_dict)
+
+                    if transaction.type == 'MAIN':
+                        self.last_transaction = transaction
 
                     self.utxo()
                     count = 0
@@ -217,6 +221,7 @@ class Node:
                     
                     # Main Transaction
                     transaction_main = Transaction(None,inputs,[Transaction_Output(script_pub_key, value)], datetime.now(), 'MAIN')
+                    self.last_transaction = transaction_main
 
                     if isinstance(transaction_to_spend, list):
                         count = 0
@@ -266,6 +271,7 @@ class Node:
 
             elif choice == 'G':
                 t = Transaction(None,[Transaction_Input("GENERATED_HASH", 'None')], [Transaction_Output("P2PK:" + self.pub_key_str, 100)], datetime.now(), 'GEN')
+                self.last_transaction = t
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
                 self.transaction_messages.append(prefixed_message)
@@ -435,6 +441,15 @@ class Node:
             #     tried = False
         
         return transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value
+
+    def gen_coins(self):
+        t = Transaction(None,[Transaction_Input("GENERATED_HASH", 'None')], [Transaction_Output("P2PK:" + self.pub_key_str, 100)], datetime.now(), 'GEN')
+        self.last_transaction = t
+        self.transaction_pool.add(t)
+        prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+        self.transaction_messages.append(prefixed_message)
+        self.send_message(prefixed_message)
+        self.utxo()
 
     #### UTILITY FUNCTIONS ####
 
