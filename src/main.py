@@ -108,7 +108,7 @@ class Gui:
         self.main_canvas.bind('<Configure>', lambda e: self.main_canvas.configure(scrollregion= self.main_canvas.bbox("all")))
 
         self.second_frame = Frame(self.main_canvas)
-        self.main_canvas.create_window((0,0), window=self.second_frame, anchor=CENTER)
+        self.main_canvas.create_window((0,0), window=self.second_frame, anchor=N)
 
 
 
@@ -225,30 +225,51 @@ class Gui:
     #### CREATE TRANSACTIONS ####
 
     def c_transaction_op(self):
+        self.node.utxo()
+        self.my_unspent = self.node.my_unspent
+        self.to_spend_value = 0
+        self.transactions_to_send = []
+
         self.delete_frame()
 
-        self.c_transaction_frame = LabelFrame(self.second_frame, pady=10)
-        self.c_transaction_frame.pack(fill= BOTH, expand = 1, anchor=CENTER)
+        self.c_transaction_frame = LabelFrame(self.second_frame)
+        self.c_transaction_frame.pack(fill= BOTH, expand = 1, anchor=N)
 
         self.open_frame = self.c_transaction_frame
         
         choice_label = Label(self.c_transaction_frame, text='Scripting Option:')
         choice_label.grid(row=0, column=0)
         self.choice = Button(self.c_transaction_frame, text= 'P2PK', command=self.flip_choice)
-        self.choice.grid(row=0, column=1)
+        self.choice.grid(row=0, column=1, columnspan=2)
         self.info = Label(self.c_transaction_frame,  text='Send to public key')
-        self.info.grid(row=1, column=0, columnspan=2)
+        self.info.grid(row=1, column=0, columnspan=3)
 
         self.unspent_label = Label(self.c_transaction_frame, text='Please select a transaction:')
-        self.unspent_label.grid(row=2, column=0, columnspan= 2)
+        self.unspent_label.grid(row=2, column=0)
 
-        self.node.utxo()
+        unspent_btn = Button(self.c_transaction_frame, text= 'Inspect unspent transactions', command=self.node.unspent_to_txt)
+        unspent_btn.grid(row=2, column=1, columnspan=2)
 
-        t_btns = []
+        self.amount_label = Label(self.c_transaction_frame, text='Amount To spend: '+ str(self.to_spend_value))
+        self.amount_label.grid(row=3, column=0)
+        
+        restart_button = Button(self.c_transaction_frame, text = 'Restart', command=self.c_transaction_op)
+        restart_button.grid(row=3, column=1, sticky=W)
+        
+        confirm_button = Button(self.c_transaction_frame, text = 'Confirm')
+        confirm_button.grid(row=3, column=2, sticky=W)
+
+        
+
+        
+
+        self.t_btns = []
         for i in range(len(self.node.my_unspent)):
-            t_btn = Button(self.c_transaction_frame, text = 'Hash: '+self.node.my_unspent[i].hash[:40] + '...| Value: '+ str(self.node.my_unspent[i].outputs[0].value), width=50)
-            t_btn.grid(row=3+i, column=0, columnspan= 2)
-            t_btns.append(t_btn)
+            t_btn = Button(self.c_transaction_frame, text = 'Hash: '+self.node.my_unspent[i].hash[:40] + '...| Value: '+ str(self.node.my_unspent[i].outputs[0].value), width=50, command= lambda i=i: self.select_transaction(i))
+            t_btn.grid(row=4+i, column=0, columnspan= 3)
+            self.t_btns.append(t_btn)
+        
+        
 
 
 
@@ -295,18 +316,38 @@ class Gui:
             self.node.mining = True
     
     def flip_choice(self):
+        for b in self.t_btns:
+            b['state'] = NORMAL
+        self.to_spend_value = 0
+        self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
         if self.choice['text'] == 'P2PK':
             self.choice['text'] = 'P2PKS'
-            self.unspent_label['text'] = 'Please select a transaction'
-            self.info['text'] = 'Send to secure public key:'
+            self.unspent_label['text'] = 'Please select a transaction:'
+            self.info['text'] = 'Send to secure public key'
+            self.transactions_to_send = []
         elif self.choice['text'] == 'P2PKS':
             self.choice['text'] = 'MULTIP2PK'
             self.info['text'] = 'Send multiple transactions to public key'
             self.unspent_label['text'] = 'Select transaction multiple transaction:'
+            self.transactions_to_send = []
         elif self.choice['text'] == 'MULTIP2PK':
             self.choice['text'] = 'P2PK'
             self.info['text'] = 'Send to public key'
             self.unspent_label['text'] = 'Please select a transaction:'
+            self.transactions_to_send = []
+
+    def select_transaction(self, i):
+        if self.choice['text'] == 'P2PK' or self.choice['text'] == 'P2PKS':
+            self.transactions_to_send = self.my_unspent[i]
+            self.to_spend_value = self.my_unspent[i].outputs[0].value
+            self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
+            # next page
+        elif self.choice['text'] == 'MULTIP2PK':
+            self.transactions_to_send.append(self.my_unspent[i])
+            self.t_btns[i]['state'] = DISABLED
+            self.to_spend_value += self.my_unspent[i].outputs[0].value
+            self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
+
 
 
 Gui()
