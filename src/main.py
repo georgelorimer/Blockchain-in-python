@@ -256,12 +256,9 @@ class Gui:
         restart_button = Button(self.c_transaction_frame, text = 'Restart', command=self.c_transaction_op)
         restart_button.grid(row=3, column=1, sticky=W)
         
-        confirm_button = Button(self.c_transaction_frame, text = 'Confirm')
+        confirm_button = Button(self.c_transaction_frame, text = 'Confirm', command=self.d_transaction_op)
         confirm_button.grid(row=3, column=2, sticky=W)
 
-        
-
-        
 
         self.t_btns = []
         for i in range(len(self.node.my_unspent)):
@@ -269,7 +266,41 @@ class Gui:
             t_btn.grid(row=4+i, column=0, columnspan= 3)
             self.t_btns.append(t_btn)
         
-        
+    #### DETAILS FRAME ####
+    def d_transaction_op(self):
+        self.delete_frame()
+
+        self.d_transaction_frame = LabelFrame(self.second_frame, text='Details')
+        self.d_transaction_frame.pack(fill= BOTH, expand = 1, anchor=N)
+
+        self.open_frame = self.d_transaction_frame
+
+        to_spend_lbl = Label(self.d_transaction_frame, text='Amount to spend: '+str(self.to_spend_value))
+
+
+        val_lbl = Label(self.d_transaction_frame, text = 'Enter amount to send:')
+        val_entr = Entry(self.d_transaction_frame)
+
+        fee_lbl = Label(self.d_transaction_frame, text = 'Enter transaction fee or leave empty:')
+        fee_entr = Entry(self.d_transaction_frame)
+
+        addr_lbl = Label(self.d_transaction_frame, text = 'Recipient address:')
+        addr_entr = Text(self.d_transaction_frame, width= 50, height=4)
+
+        to_spend_lbl.grid(row=0, column=0, columnspan=3)
+        val_lbl.grid(row=1, column=0)
+        val_entr.grid(row=1, column=1, columnspan=2, sticky=E)
+        fee_lbl.grid(row=2, column=0, columnspan= 2)
+        fee_entr.grid(row=2, column=2, sticky=E)
+        addr_lbl.grid(row=3, column=0)
+        addr_entr.grid(row=3, column=1, columnspan=2)
+
+        clear_button = Button(self.d_transaction_frame, text='Clear', command=self.d_transaction_op)
+        confirm_button = Button(self.d_transaction_frame, text='Confirm', command= lambda: self.transaction_details(addr_entr.get("1.0", END), val_entr.get(), fee_entr.get()))
+
+        clear_button.grid(row=4, column=1)
+        confirm_button.grid(row=4, column=2)
+
 
 
 
@@ -338,7 +369,11 @@ class Gui:
 
     def select_transaction(self, i):
         if self.choice['text'] == 'P2PK' or self.choice['text'] == 'P2PKS':
-            self.transactions_to_send = self.my_unspent[i]
+            for btn in self.t_btns:
+                if btn['state'] == DISABLED:
+                    btn['state'] = NORMAL
+            self.transactions_to_send = [self.my_unspent[i]]
+            self.t_btns[i]['state'] = DISABLED
             self.to_spend_value = self.my_unspent[i].outputs[0].value
             self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
             # next page
@@ -348,6 +383,8 @@ class Gui:
             self.to_spend_value += self.my_unspent[i].outputs[0].value
             self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
 
+    def transaction_details(self, script_public_key, value, transaction_fee):
+        self.node.transaction_maker(self.transactions_to_send, script_public_key, int(value), int(transaction_fee), int(self.to_spend_value))
 
 
 Gui()

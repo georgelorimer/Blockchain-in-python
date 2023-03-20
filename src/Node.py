@@ -451,6 +451,64 @@ class Node:
         self.transaction_messages.append(prefixed_message)
         self.send_message(prefixed_message)
         self.utxo()
+    
+    def transaction_maker(self, transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value):
+        inputs = []
+        for transaction in transaction_to_spend:
+            transaction_hash = transaction.hash
+
+            signer = eddsa.new(self.private_key, 'rfc8032')
+            script_sig = signer.sign(str(transaction.to_json_complete()).encode('utf-8'))
+            inputs.append(Transaction_Input(transaction_hash, script_sig))
+        
+        # Main Transaction
+        transaction_main = Transaction(None,inputs,[Transaction_Output(script_pub_key, value)], datetime.now(), 'MAIN')
+        self.last_transaction = transaction_main
+
+        if isinstance(transaction_to_spend, list):
+            count = 0
+            for transaction in transaction_to_spend:
+                verified = transaction_main.verify(transaction, self.unspent, count)
+                count += 1
+                if verified == False:
+                    break
+        else:
+            verified = transaction_main.verify(transaction_to_spend, self.unspent, 0)
+
+        if verified == True:
+            self.transaction_pool.add(transaction_main)
+            prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
+            self.transaction_messages.append(prefixed_message)
+            self.send_message(prefixed_message)
+            self.utxo()
+            
+
+            # Change Transaction
+            remaining = to_spend_value - value - transaction_fee
+            t = Transaction(None,inputs,[Transaction_Output("P2PK:" + self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
+            if isinstance(transaction_to_spend, list):
+                count = 0
+                for transaction in transaction_to_spend:
+                    verified = t.verify(transaction, self.unspent, count)
+                    count += 1
+                    if verified == False:
+                        break
+            else:
+                verified = t.verify(transaction_to_spend, self.unspent, 0)
+            self.transaction_pool.add(t)
+            prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+            self.transaction_messages.append(prefixed_message)
+            self.send_message(prefixed_message)
+
+
+            # Fee Transaction
+            t = Transaction(None,[Transaction_Input(transaction_hash, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
+            self.transaction_pool.add(t)
+            prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+            self.transaction_messages.append(prefixed_message)
+            self.send_message(prefixed_message)
+        else:
+            print("Transaction not verified")
 
     #### UTILITY FUNCTIONS ####
 

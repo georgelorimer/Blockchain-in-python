@@ -24,7 +24,7 @@ class Transaction_Input(namedtuple("Transaction_Input", ["transaction_hash", "sc
             'script_sig': self.script_sig
         }
     def to_txt_format(self):
-        return '\tInput Hash: '+ self.transaction_hash+'\n\tScript Signature: '+ self.script_sig
+        return '\tInput Hash: '+ self.transaction_hash+'\n\tScript Signature: '+ str(self.script_sig)
 
 
 class Transaction_Output(namedtuple("Transaction_Output", ["script_pub_key", "value"])):
