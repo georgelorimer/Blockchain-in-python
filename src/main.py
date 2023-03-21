@@ -172,7 +172,13 @@ class Gui:
         time_lable.grid(row=6, column=0)
         time_out = Label(self.home_frame, text= self.node.time_for_next_round - datetime.now())
         time_out.grid(row=6, column=1)
-        
+
+        msg_lbl = Label(self.home_frame, text='Message:')
+        msg_out = Label(self.home_frame, text=self.node.event_messages)
+        msg_lbl.grid(row=7, column=0)
+        msg_out.grid(row=7, column=1)
+
+
 
     #### TRANSACTION FRAME ####
 

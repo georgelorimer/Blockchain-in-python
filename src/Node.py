@@ -27,6 +27,7 @@ class Node:
         self.peer_dict = {}
         self.balance = 0
         self.last_transaction = None
+        self.event_messages = None
 
         self.generate_keys()
         self.transaction_pool = Transaction_Pool(self.pub_key_str)
@@ -139,6 +140,8 @@ class Node:
                         print('Success')
                         self.transaction_pool.add(transaction)
                         self.utxo()
+                        if transaction in self.my_unspent and transaction.type == 'MAIN':
+                            self.event_messages = 'You recieved '+str(transaction.outputs[0].value)+' Greckles!'
                         self.send_message(str_data)
                     
             elif str_data.startswith("BLOCK"):
@@ -163,6 +166,7 @@ class Node:
                             self.block_found = False
                             self.eligible = True
 
+                        self.event_messages = 'You recieved a new block'
                         self.send_message(str_data)
                     
             
@@ -186,6 +190,7 @@ class Node:
                     if int(str_array[1]) != int(str(self.port)):
                         
                         self.connect_to_peer(int(str_array[1]))
+                        self.event_messages = 'You connected to Port: '+str(str_array[1])
                         
                         self.transaction_messages.append(str_data)
                         self.send_message(str_data)
@@ -344,6 +349,7 @@ class Node:
                         dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                         self.time_for_next_round =  dt + timedelta(0,60)
                         self.utxo()
+                        self.event_messages = 'You mined a new block and recieved '+str(b.block_transactions[0].outputs[0].value)+' Greckles!'
                 elif self.block_found == True:
                     print("\n\n\n I LOST \n\n\n")
                     self.block_found = False
@@ -451,6 +457,7 @@ class Node:
         self.transaction_messages.append(prefixed_message)
         self.send_message(prefixed_message)
         self.utxo()
+        self.event_messages = 'You Generated 100 Greckles!'
     
     def transaction_maker(self, transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value):
         inputs = []
@@ -507,6 +514,7 @@ class Node:
             prefixed_message="TRANSACTION:" + str(t.to_json_complete())
             self.transaction_messages.append(prefixed_message)
             self.send_message(prefixed_message)
+            self.event_messages = 'You sent '+str(transaction_main.outputs[0].value)+' Greckles!'
             return True
         else:
             print("Transaction not verified")
@@ -599,6 +607,7 @@ class Node:
         self.private_key = new_private_key
         self.public_key = new_public_key
         self.pub_key_str = new_pub_key_str
+        self.event_messages = "You created a new private key"
 
 
 
