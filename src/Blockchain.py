@@ -2,6 +2,7 @@
 from Block import *
 
 from datetime import datetime
+from hashlib import sha256
 
 # change datetime
 time = datetime.now()
@@ -25,12 +26,17 @@ class Blockchain:
             toHash = str(block.to_json_header())
             hashed = sha256(toHash.encode('utf-8')).hexdigest()
 
-            if hashed.startswith(block.threshold):
-                self.blockchain.append(block)
-                return True
-            else:
+            if hashed.startswith(block.threshold) == False:
                 print('Nonce is incorrect')
                 return False
+
+        # if block.hash_of_transaction != sha256(str(block.block_transactions).encode('utf-8')).hexdigest():
+        #     print('Transaction hash not valid')
+        #     return False
+
+        self.blockchain.append(block)
+        return True
+
 
     def head(self):
         return self.blockchain[-1]

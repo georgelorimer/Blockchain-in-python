@@ -10,6 +10,8 @@ class Gui:
 
     def __init__(self) -> None:
         self.open_frame = None
+        self.connect_message = None
+        self.transaction_message = None
 
         self.root = Tk()
         self.root.geometry('550x300')
@@ -51,6 +53,7 @@ class Gui:
     #### CONNECT FRAME ####
 
     def enter(self):
+
         self.login_frame = LabelFrame(self.root, text = 'Connect')
         self.login_frame.grid(row=1, column= 0,columnspan=6)
 
@@ -76,22 +79,33 @@ class Gui:
         connect = Button(self.login_frame, text='Connect', command= self.start)
         connect.grid(row=3, column=0, columnspan=2)
 
-        
-
-        # self.b = Button(self.login_frame, text='delete frame', command=self.delete_frame(self.login_frame))
-        # self.b.grid(row=3, column=2)
+        msg = Label(self.login_frame, text = self.connect_message).grid(row=4, column=0, columnspan=2)
 
     def start(self):
-        port = self.port_input.get()
-        if self.opt_but['text'] == "YES":
-            peer = int(self.conn_input.get())
-        elif self.opt_but['text'] == "NO":
-            peer = None
-        
-        self.node = Node(int(port),peer)
+        try:
+            port = self.port_input.get()
+            if self.opt_but['text'] == "YES":
+                peer = int(self.conn_input.get())
+            elif self.opt_but['text'] == "NO":
+                peer = None
+            
+            self.node = Node(int(port),peer)
 
-        self.main_frame_open()
-        self.home_op()
+            self.main_frame_open()
+            self.home_op()
+        except OSError:
+            self.connect_message = 'Port error, Try again.'
+            self.login_frame.destroy()
+            self.enter()
+
+        except ConnectionRefusedError:
+            self.connect_message = 'Connection refused'
+            self.login_frame.destroy()
+            self.enter()
+        except:
+            self.connect_message = 'Port error, Try again.'
+            self.login_frame.destroy()
+            self.enter()
 
 
     #### MAIN FRAME ####
@@ -184,6 +198,7 @@ class Gui:
 
     def transaction_op(self):
         self.delete_frame()
+        self.node.utxo()
 
         self.transaction_frame = Frame(self.second_frame, pady=10)
         self.transaction_frame.pack(fill= BOTH, expand = 1, side=TOP)
@@ -201,8 +216,10 @@ class Gui:
         unspent_btn = Button(self.transaction_frame, text= 'Unspent transactions', command=self.node.unspent_to_txt)
         unspent_btn.grid(row=1, column=1)
 
-        unspent_btn = Button(self.transaction_frame, text= 'Create a transaction', command=self.c_transaction_op)
+        unspent_btn = Button(self.transaction_frame, text= 'Create a transaction', command=self.c_transaction_op, state=NORMAL)
         unspent_btn.grid(row=1, column=2)
+        if self.node.my_unspent == None or len(self.node.my_unspent) == 0:
+            unspent_btn['state'] = DISABLED
 
         lt_lable = Label(self.transaction_frame, text='Last Transaction:', padx=10, pady=10)
         lt_lable.grid(row=2, column=0)
@@ -290,7 +307,7 @@ class Gui:
         val_lbl = Label(self.d_transaction_frame, text = 'Enter amount to send:')
         val_entr = Entry(self.d_transaction_frame)
 
-        fee_lbl = Label(self.d_transaction_frame, text = 'Enter transaction fee or leave empty:')
+        fee_lbl = Label(self.d_transaction_frame, text = 'Enter transaction fee or enter "x":')
         fee_entr = Entry(self.d_transaction_frame)
 
         addr_lbl = Label(self.d_transaction_frame, text = 'Recipient address:')
@@ -304,11 +321,13 @@ class Gui:
         addr_lbl.grid(row=3, column=0)
         addr_entr.grid(row=3, column=1)
 
-        clear_button = Button(self.d_transaction_frame, text='Clear', command=self.d_transaction_op)
-        confirm_button = Button(self.d_transaction_frame, text='Confirm', command= lambda: self.transaction_details(addr_entr.get(), val_entr.get(), fee_entr.get()))
+        clear_button = Button(self.d_transaction_frame, text='Clear', command=lambda: self.d_transaction_op(choice))
+        confirm_button = Button(self.d_transaction_frame, text='Confirm', command= lambda: self.transaction_details(addr_entr.get(), val_entr.get(), fee_entr.get(), choice))
 
         clear_button.grid(row=4, column=0)
         confirm_button.grid(row=4, column=1)
+
+        error = Label(self.d_transaction_frame, text = self.transaction_message).grid(row=5, column=0, columnspan=2)
 
 
     #### BLOCK EXPLORER FRAME ###
@@ -352,17 +371,20 @@ class Gui:
         if self.node.eligible == False:
             gen['state'] = DISABLED
 
-        regen = Button(self.other_frame, text= 'Regenerate Keys', command= self.node.regenerate_keys)
+        regen = Button(self.other_frame, text= 'Regenerate Keys', command= self.regenerate_keys)
         regen.pack()
         
         self.priv = Button(self.other_frame, text= 'Show Private key', command= self.private_key)
         self.priv.pack()
     
+    def regenerate_keys(self):
+        self.node.regenerate_keys()
+        self.other_op()
+    
     def private_key(self):
         if self.priv['text'] == 'Show Private key':
             self.privk = Text(self.other_frame, width=25, height=4)
             self.privk.insert(1.0, str(int.from_bytes(self.node.private_key.seed, 'big')))
-            print(self.node.private_key)
             self.privk.pack()
             self.priv['text'] = 'Hide Private key'
 
@@ -493,22 +515,33 @@ class Gui:
         
 
 
-    def transaction_details(self, script_public_key, value, transaction_fee):
-        success = self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+script_public_key), int(value), int(transaction_fee), int(self.to_spend_value))
-        self.delete_frame()
-        self.success_frame = Frame(self.second_frame, pady=10)
-        self.success_frame.pack(fill= BOTH, expand = 1)
+    def transaction_details(self, script_public_key, value, transaction_fee, choice):
+        try:
+            if transaction_fee == 'x':
+                transaction_fee = 0
 
-        self.open_frame = self.success_frame
+            if self.to_spend_value < int(value) + int(transaction_fee) or int(value) < 0 or int(transaction_fee)<0:
+                self.transaction_message = 'Incorrect values, Please Try again'
+                self.d_transaction_op(choice)
+            else:
+                success = self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+script_public_key), int(value), int(transaction_fee), int(self.to_spend_value))
+                self.delete_frame()
+                self.success_frame = Frame(self.second_frame, pady=10)
+                self.success_frame.pack(fill= BOTH, expand = 1)
 
-        if success == True:
-            message = 'Transaction Succesful, you sent '+value+' Greckles!'
-        else:
-            message = 'Something went wrong, please try again.'
-        
-        Label(self.success_frame, text=message).pack()
+                self.open_frame = self.success_frame
 
-        Button(self.success_frame, text='Continue', command=self.home_op).pack()
+                if success == True:
+                    message = 'Transaction Succesful, you sent '+value+' Greckles!'
+                else:
+                    message = 'Something went wrong, please try again.'
+                
+                Label(self.success_frame, text=message).pack()
+
+                Button(self.success_frame, text='Continue', command=self.home_op).pack()
+        except:
+            self.transaction_message = 'Input Error, Please Try Again.'
+            self.d_transaction_op(choice)
 
 
 Gui()
