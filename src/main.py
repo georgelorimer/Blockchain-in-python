@@ -307,25 +307,26 @@ class Gui:
 
     #### BLOCK EXPLORER FRAME ###
     def be_op(self):
+        self.root.geometry('550x300')
         self.delete_frame()
         self.be_frame = Frame(self.second_frame)
         self.be_frame.pack(fill= BOTH, expand = 1, anchor=N)
 
         self.open_frame = self.be_frame
 
-        blockchain = self.node.blockchain.blockchain.copy()
-        blockchain.reverse()
+        self.blockchain = self.node.blockchain.blockchain.copy()
+        self.blockchain.reverse()
 
         Label(self.be_frame, text= 'Blockchain Explorer').pack()
 
         self.b_btns = []
         
-        for i in range(len(blockchain)):
+        for i in range(len(self.blockchain)):
             if i != 0:
                 Label(self.be_frame, text='^').pack()
-            dt =  blockchain[i].time
+            dt =  self.blockchain[i].time
             time = str(dt[2]) + '/' + str(dt[1]) + '/' + str(dt[0]) + '-' + str(dt[3]) + ':' + str(dt[4]) +':'+ str(dt[5])
-            b_btn = Button(self.be_frame, text = 'Hash: '+blockchain[i].block_hash[:20] + '...| Time Stamp: '+ time, width=50) #, command= lambda i=i: self.select_block(i))
+            b_btn = Button(self.be_frame, text = 'Hash: '+self.blockchain[i].block_hash[:20] + '...| Time Stamp: '+ time, width=50, command= lambda i=i: self.select_block(i))
             b_btn.pack()
             self.b_btns.append(b_btn)
 
@@ -407,6 +408,66 @@ class Gui:
             self.t_btns[i]['state'] = DISABLED
             self.to_spend_value += self.my_unspent[i].outputs[0].value
             self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
+
+    def select_block(self, i):
+        block = self.blockchain[i]
+
+
+        self.delete_frame()
+
+        self.block_frame = Frame(self.second_frame, pady=10)
+        self.block_frame.pack(fill= BOTH, expand = 1)
+
+        self.open_frame = self.block_frame
+
+        h_lbl = Label(self.block_frame, text= 'Hash:')
+        h_lbl.grid(row=0, column=0)
+        h_out = Label(self.block_frame, text= block.block_hash[:40] + '...')
+        h_out.grid(row=0, column=1)
+
+        ph = Label(self.block_frame, text='Previous Hash:')
+        try:
+            ph_out = Label(self.block_frame, text= block.prev_block_hash[:30]+ '...')
+        except:
+            ph_out = Label(self.block_frame, text= 'None')
+        ph.grid(row=1, column=0)
+        ph_out.grid(row=1, column=1)
+
+        tim = Label(self.block_frame, text='Time Stamp:')
+        tim_out = Label(self.block_frame, text= block.time)
+        tim.grid(row=2, column=0)
+        tim_out.grid(row=2, column=1)
+        
+        non = Label(self.block_frame, text='Nonce:')
+        non_out = Label(self.block_frame, text= block.nonce)
+        non.grid(row=3, column=0)
+        non_out.grid(row=3, column=1)
+
+        cb = Label(self.block_frame, text='Coinbase Fee:')
+        if block.block_hash == 'GENESIS_HASH':
+            cb_out = Label(self.block_frame, text= 'None')
+        else:
+            cb_out = Label(self.block_frame, text= '50')
+        cb.grid(row=4, column=0)
+        cb_out.grid(row=4, column=1)
+
+        
+        tf = Label(self.block_frame, text='Transaction Fee:')
+        try:
+            tf_out = Label(self.block_frame, text= block.block_transactions[0].outputs[0].value - 50)
+        except:
+            tf_out = Label(self.block_frame, text= 'None')
+        tf.grid(row=5, column=0)
+        tf_out.grid(row=5, column=1)
+
+        view = Button(self.block_frame, text= 'Block Transactions', command= block.to_txt)
+        back = Button(self.block_frame, text= 'Back', command= self.be_op)
+        view.grid(row=6, column=0)
+        back.grid(row=6, column=1)
+        if block.block_hash == 'GENESIS_HASH':
+            view['state'] = DISABLED
+        
+
 
     def transaction_details(self, script_public_key, value, transaction_fee):
         success = self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+script_public_key), int(value), int(transaction_fee), int(self.to_spend_value))

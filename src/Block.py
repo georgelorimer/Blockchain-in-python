@@ -94,3 +94,23 @@ class Block:
             block_transactions.append(Transaction.from_json_compatible(transaction))
 
         return cls(block_hash, prev_block_hash, hash_of_transaction, time, nonce, block_transactions)
+    
+    def txt_format(self):
+        winner = self.block_transactions[0].outputs[0].script_pub_key.split(':')
+        pk = winner[1]
+        h_text = 'Block Explorer\n' + 'Header:\n\tHash: '+self.block_hash+'\n\tHash of previos block: '+self.prev_block_hash+'\n\tHash of Transactions: '+self.hash_of_transaction+'\n\tTime Stamp: '+str(self.time)+'\n\tNonce: '+str(self.nonce)+'\n\tBlock Reward: 50\n\tTransaction Fee: '+str(self.block_transactions[0].outputs[0].value - 50)+'\n\tBlock creator: '+pk
+        b_text = h_text + '\n------------------------------------------------------------------------------\n------------------------------------------------------------------------------\nContents:'
+        for i in range(len(self.block_transactions)):
+            b_text = b_text+'\n------------------------------------------------------------------------------\n'
+            b_text = b_text + 'Transaction '+ str(i+1)+ ': \n'
+            b_text = b_text + self.block_transactions[i].txt_format()
+        
+        return b_text
+        
+    def to_txt(self):
+        text = self.txt_format()
+        file = open('text/block_file.txt', 'w')
+        file.write(text)
+        file.close()
+        os.system('open -t text/block_file.txt')
+        
