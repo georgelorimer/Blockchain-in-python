@@ -559,6 +559,48 @@ class Node:
         self.public_key = self.private_key.public_key()
         self.pub_key_str = str(self.public_key.pointQ.x) + '+' + str(self.public_key.pointQ.y)
 
+    def regenerate_keys(self):
+        self.utxo()
+        new_private_key = ECC.generate(curve='ed25519')
+        new_public_key = new_private_key.public_key()
+        new_pub_key_str = str(new_public_key.pointQ.x) + '+' + str(new_public_key.pointQ.y)
+
+        inputs = []
+        value = 0
+        if self.my_unspent == None or len(self.my_unspent) == 0:
+            pass
+        else:
+            cp_my_unspent = self.my_unspent.copy()
+            for transaction in cp_my_unspent:
+                value += transaction.outputs[0].value
+                transaction_hash = transaction.hash
+
+                signer = eddsa.new(self.private_key, 'rfc8032')
+                script_sig = signer.sign(str(transaction.to_json_complete()).encode('utf-8'))
+                inputs.append(Transaction_Input(transaction_hash, script_sig))
+            
+            transaction_main = Transaction(None,inputs,[Transaction_Output('MULTIP2PK:'+new_pub_key_str, value)], datetime.now(), 'MAIN')
+            self.last_transaction = transaction_main
+
+            count = 0
+            for transaction in cp_my_unspent:
+                verified = transaction_main.verify(transaction, self.unspent, count)
+                count += 1
+                if verified == False:
+                    break
+            
+            if verified == True:
+                self.transaction_pool.add(transaction_main)
+                prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
+                self.transaction_messages.append(prefixed_message)
+                self.send_message(prefixed_message)
+                self.utxo()
+        
+        self.private_key = new_private_key
+        self.public_key = new_public_key
+        self.pub_key_str = new_pub_key_str
+
+
 
     def utxo(self):
         while not self.blockchain:
@@ -567,7 +609,7 @@ class Node:
         # list of all transactions in blockchain and transaction pool - genesis block
         all_transactions = self.blockchain.return_transactions() + self.transaction_pool.from_json_transactions()
         if len(all_transactions) == 0:
-            pass
+            self.my_unspent = None
         else:
             unspent = []
 

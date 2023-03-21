@@ -290,19 +290,19 @@ class Gui:
         addr_lbl = Label(self.d_transaction_frame, text = 'Recipient address:')
         addr_entr = Entry(self.d_transaction_frame)
 
-        to_spend_lbl.grid(row=0, column=0, columnspan=3)
+        to_spend_lbl.grid(row=0, column=0, columnspan=2)
         val_lbl.grid(row=1, column=0)
-        val_entr.grid(row=1, column=1, columnspan=2, sticky=E)
-        fee_lbl.grid(row=2, column=0, columnspan= 2, sticky= W)
-        fee_entr.grid(row=2, column=2, sticky=E)
+        val_entr.grid(row=1, column=1)
+        fee_lbl.grid(row=2, column=0)
+        fee_entr.grid(row=2, column=1)
         addr_lbl.grid(row=3, column=0)
-        addr_entr.grid(row=3, column=1, columnspan=2)
+        addr_entr.grid(row=3, column=1)
 
         clear_button = Button(self.d_transaction_frame, text='Clear', command=self.d_transaction_op)
         confirm_button = Button(self.d_transaction_frame, text='Confirm', command= lambda: self.transaction_details(addr_entr.get(), val_entr.get(), fee_entr.get()))
 
-        clear_button.grid(row=4, column=1)
-        confirm_button.grid(row=4, column=2)
+        clear_button.grid(row=4, column=0)
+        confirm_button.grid(row=4, column=1)
 
 
     #### BLOCK EXPLORER FRAME ###
@@ -343,7 +343,11 @@ class Gui:
 
         gen = Button(self.other_frame, text= 'Generate Coins', command= self.node.gen_coins)
         gen.pack()
+        if self.node.eligible == False:
+            gen['state'] = DISABLED
 
+        regen = Button(self.other_frame, text= 'Regenerate Keys', command= self.node.regenerate_keys)
+        regen.pack()
 
 
 
@@ -427,7 +431,7 @@ class Gui:
 
         ph = Label(self.block_frame, text='Previous Hash:')
         try:
-            ph_out = Label(self.block_frame, text= block.prev_block_hash[:30]+ '...')
+            ph_out = Label(self.block_frame, text= block.prev_block_hash[:40]+ '...')
         except:
             ph_out = Label(self.block_frame, text= 'None')
         ph.grid(row=1, column=0)

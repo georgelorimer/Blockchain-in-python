@@ -1,117 +1,65 @@
 Block Explorer
 Header:
-	Hash: 00000f344ee39769612db319f2c5e227c5d9f3a70274d9d7def946fddb62812f
-	Hash of previos block: 00000fd839b90f6000c7ad8617a7d8ad1679e06f4fe742b457d546f170fa8093
-	Hash of Transactions: 4b5b863d702474f8d316b1389149d58b961b991386d5479010c9435781904438
-	Time Stamp: [2023, 3, 21, 9, 53, 34, 470149]
-	Nonce: 1319732
+	Hash: 00000ae1414d7ef7f3efb8a87e23ba05b6089096ca541468b18c671681d67c39
+	Hash of previos block: 0000047cbaf6a389852fb2f1009960b69db54677700b6cded1b3af747fee5b36
+	Hash of Transactions: 066ddc5c5147d92535a1c9a3ba647a2506fe1f7826fc155e7faa822fe00f74b7
+	Time Stamp: [2023, 3, 21, 11, 46, 54, 996792]
+	Nonce: 173586
 	Block Reward: 50
-	Transaction Fee: 0
-	Block creator: 37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
+	Transaction Fee: 4
+	Block creator: 46766012216693040431046013768721290681115746984416503839465275420678032702493+43010141854268722027245296559196714905310280791827491113320342553781541724980
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 Contents:
 ------------------------------------------------------------------------------
 Transaction 1: 
-Transaction: 2f9ff89d800ec9237c1694b623087a58e854c698c82ab7d1200d6c5e412e2ec7
-Value: 50
-Timestamp: 2023-03-21 09:53:34.470102
+Transaction: b4c0ffd931b50623faffe83b36afecec07a20961999bcce01353a4a42b52080e
+Value: 54
+Timestamp: 2023-03-21 11:46:54.996726
 Type: COINBASE
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Inputs: 
 1.	Input Hash: COINBASE_TRANSACTION
 	Script Signature: None
 Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 50
+	Script Pub Key: P2PK:46766012216693040431046013768721290681115746984416503839465275420678032702493+43010141854268722027245296559196714905310280791827491113320342553781541724980
+	Value: 54
 ------------------------------------------------------------------------------
 Transaction 2: 
-Transaction: 62bf23c48c3a8f2da3b5e6250de03efccfa70dd1c90a7e412bb6d03074fac6fb
-Value: 100
-Timestamp: 2023-03-21 09:53:05.013906
-Type: GEN
+Transaction: 3ad0dbb30c3c399ec25e60e3d1fb8f7d8aaf9077085a5e371adbe58c9ee86b9a
+Value: 25
+Timestamp: 2023-03-21 11:46:49.315226
+Type: MAIN
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Inputs: 
-1.	Input Hash: GENERATED_HASH
-	Script Signature: None
+1.	Input Hash: 6652c0c2f63ef4ad199abe7b7230d26e03e023c038821b5d522811a3d04aa49f
+	Script Signature: b'?\xe6\xf5\x0cR\xde*}\xf8\xed\x012\xaeR\xa3\x9b\xa5SL(!\xba\x1f\xd9G\xb9\xe4\xff\xadm\t!\x8b\xb1I\x08\xbaStqf\xd5\xd5\xd6y\x18\xc6\xb6\xc0[\x01\xb1\xc9\xb9\x93\xa6\x1cl\xa2\xc5\x1d\xe3B\x01'
 Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 100
+	Script Pub Key: P2PK:19631833683905290565502916519630619329818054256065470322706642671250793771412+23176899679854332885406402424446760573546554735197843900628019470423426365450
+	Value: 25
 ------------------------------------------------------------------------------
 Transaction 3: 
-Transaction: 1e4c7d8596039f31ae32c166995ea704750e5ea93fcf98fa0f5f7ffe4bb968d3
-Value: 100
-Timestamp: 2023-03-21 09:53:05.186965
-Type: GEN
+Transaction: c814f30ec5fd087c0579cd99e3639fe7cb94155bbaa8c4b76fd8d8553e3b2361
+Value: 21
+Timestamp: 2023-03-21 11:46:49.379523
+Type: CHANGE
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Inputs: 
-1.	Input Hash: GENERATED_HASH
-	Script Signature: None
+1.	Input Hash: 6652c0c2f63ef4ad199abe7b7230d26e03e023c038821b5d522811a3d04aa49f
+	Script Signature: b'?\xe6\xf5\x0cR\xde*}\xf8\xed\x012\xaeR\xa3\x9b\xa5SL(!\xba\x1f\xd9G\xb9\xe4\xff\xadm\t!\x8b\xb1I\x08\xbaStqf\xd5\xd5\xd6y\x18\xc6\xb6\xc0[\x01\xb1\xc9\xb9\x93\xa6\x1cl\xa2\xc5\x1d\xe3B\x01'
 Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 100
+	Script Pub Key: P2PK:46766012216693040431046013768721290681115746984416503839465275420678032702493+43010141854268722027245296559196714905310280791827491113320342553781541724980
+	Value: 21
 ------------------------------------------------------------------------------
 Transaction 4: 
-Transaction: b77ee24cbb0b4a6d60956f95da3e5a3392abf261bcb98caeab7871d2118efa31
-Value: 100
-Timestamp: 2023-03-21 09:53:05.335871
-Type: GEN
+Transaction: dfaa9a9df538a0dd1cfa0e192124faa305a7ed2a6917c820f34cfe4c2084e0e5
+Value: 4
+Timestamp: 2023-03-21 11:46:49.425612
+Type: FEE
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Inputs: 
-1.	Input Hash: GENERATED_HASH
-	Script Signature: None
+1.	Input Hash: 6652c0c2f63ef4ad199abe7b7230d26e03e023c038821b5d522811a3d04aa49f
+	Script Signature: TRANSACTION_FEE
 Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 100
-------------------------------------------------------------------------------
-Transaction 5: 
-Transaction: ffd2a0fd2da2891d56baac94b91d8fdf12be3352ce45015cd6a75be0269f6214
-Value: 100
-Timestamp: 2023-03-21 09:53:05.479144
-Type: GEN
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Inputs: 
-1.	Input Hash: GENERATED_HASH
-	Script Signature: None
-Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 100
-------------------------------------------------------------------------------
-Transaction 6: 
-Transaction: 23d68b2fa79597803426973c277c91d518a15df7df9eaf6e5ef12790ca650b64
-Value: 100
-Timestamp: 2023-03-21 09:53:05.618379
-Type: GEN
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Inputs: 
-1.	Input Hash: GENERATED_HASH
-	Script Signature: None
-Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 100
-------------------------------------------------------------------------------
-Transaction 7: 
-Transaction: 7509e106e83db1ae08bccb53d75b48b8d041445441a3cde655257cc2da11a415
-Value: 100
-Timestamp: 2023-03-21 09:53:05.771134
-Type: GEN
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Inputs: 
-1.	Input Hash: GENERATED_HASH
-	Script Signature: None
-Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 100
-------------------------------------------------------------------------------
-Transaction 8: 
-Transaction: 7a7ceeee6ae5ebb1ff6a27ebd492c678b61cf2eb35670cac073d5cfd2d8ea6a1
-Value: 100
-Timestamp: 2023-03-21 09:53:05.905706
-Type: GEN
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Inputs: 
-1.	Input Hash: GENERATED_HASH
-	Script Signature: None
-Output:
-	Script Pub Key: P2PK:37037359600464281090421134003513517629280220007778297469962414008173655292159+38891255078302651315364826193799720122488549384852466705725586745679425403436
-	Value: 100
+	Script Pub Key: BLOCK_CREATOR
+	Value: 4
