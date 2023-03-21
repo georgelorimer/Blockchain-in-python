@@ -348,7 +348,21 @@ class Gui:
 
         regen = Button(self.other_frame, text= 'Regenerate Keys', command= self.node.regenerate_keys)
         regen.pack()
+        
+        self.priv = Button(self.other_frame, text= 'Show Private key', command= self.private_key)
+        self.priv.pack()
+    
+    def private_key(self):
+        if self.priv['text'] == 'Show Private key':
+            self.privk = Text(self.other_frame, width=25, height=4)
+            self.privk.insert(1.0, str(int.from_bytes(self.node.private_key.seed, 'big')))
+            print(self.node.private_key)
+            self.privk.pack()
+            self.priv['text'] = 'Hide Private key'
 
+        elif self.priv['text'] == 'Hide Private key':
+            self.privk.destroy()
+            self.priv['text'] = 'Show Private key'
 
 
     #### UTLITY FUNCTIONS ####
