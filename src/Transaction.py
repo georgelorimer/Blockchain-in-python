@@ -3,7 +3,7 @@ from typing import List
 from datetime import datetime
 from collections import namedtuple
 from hashlib import sha256
-import os
+import subprocess, os, platform
 
 
 from Crypto.PublicKey import ECC
@@ -187,7 +187,14 @@ class Transaction:
         file = open('text/transaction_file.txt', 'w')
         file.write(text)
         file.close()
-        os.system('open -t text/transaction_file.txt')
+
+        filepath = 'text/transaction_file.txt'
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', filepath))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(filepath)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', filepath))
     
     def txt_format(self):
         text= 'Transaction: '+ self.hash + '\n'+'Value: '+ str(self.outputs[0].value)+ '\n'+'Timestamp: '+ str(self.timestamp)+ '\n'+'Type: '+self.type+ '\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n'+'Inputs: '

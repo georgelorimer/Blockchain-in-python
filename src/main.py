@@ -4,8 +4,6 @@ from datetime import datetime
 
 from Node import Node
 
-
-
 class Gui:
 
     def __init__(self) -> None:
@@ -186,6 +184,9 @@ class Gui:
         time_lable.grid(row=6, column=0)
         time_out = Label(self.home_frame, text= self.node.time_for_next_round - datetime.now())
         time_out.grid(row=6, column=1)
+
+        if self.node.time_for_next_round < datetime.now():
+            time_out['text'] = 'Block is being mined'
 
         msg_lbl = Label(self.home_frame, text='Message:')
         msg_out = Label(self.home_frame, text=self.node.event_messages)

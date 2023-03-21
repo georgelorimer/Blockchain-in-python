@@ -2,6 +2,7 @@
 from hashlib import sha256
 from datetime import datetime
 from Transaction import *
+import subprocess, os, platform
 
 class Block:
     
@@ -32,7 +33,11 @@ class Block:
         t = Transaction(None,[Transaction_Input("COINBASE_TRANSACTION", 'None')], [Transaction_Output('P2PK:' + creator, 50+fee)], datetime.now(), 'COINBASE')
         transactions.insert(0, t)
 
-        hash_of_transaction = sha256(str(transactions).encode('utf-8')).hexdigest()
+        json_transactions = []
+        for transaction in transactions:
+            json_transactions.append(transaction.to_json_complete())
+
+        hash_of_transaction = sha256(str(json_transactions).encode('utf-8')).hexdigest()
 
         dtime = datetime.now()
         time = [dtime.year, dtime.month, dtime.day, dtime.hour, dtime.minute, dtime.second, dtime.microsecond]
@@ -112,5 +117,11 @@ class Block:
         file = open('text/block_file.txt', 'w')
         file.write(text)
         file.close()
-        os.system('open -t text/block_file.txt')
         
+        filepath = 'text/block_file.txt'
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', filepath))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(filepath)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', filepath))

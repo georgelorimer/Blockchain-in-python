@@ -29,10 +29,14 @@ class Blockchain:
             if hashed.startswith(block.threshold) == False:
                 print('Nonce is incorrect')
                 return False
+        
+        json_transactions = []
+        for transaction in block.block_transactions:
+            json_transactions.append(transaction.to_json_complete())
 
-        # if block.hash_of_transaction != sha256(str(block.block_transactions).encode('utf-8')).hexdigest():
-        #     print('Transaction hash not valid')
-        #     return False
+        if block.hash_of_transaction != sha256(str(json_transactions).encode('utf-8')).hexdigest():
+            print('Transaction hash not valid')
+            return False
 
         self.blockchain.append(block)
         return True

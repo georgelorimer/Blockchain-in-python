@@ -1,21 +1,11 @@
-Transaction: 4f016788df9df9577b61ae75d8f329015c824e9054afe8033afbc5b86df81c9a
-Value: 600
-Timestamp: 2023-03-21 13:40:34.282679
-Type: MAIN
+Transaction: 748aaaeeafebba402d2c7aeef4060379646927c55841799361aaaa22616ca293
+Value: 100
+Timestamp: 2023-03-21 19:25:06.076436
+Type: GEN
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Inputs: 
-1.	Input Hash: 26469c2dfb3d91c8f12fe26a6756bc8aef8b2a5fe974f0b52f3e257628eb85da
-	Script Signature: b"~\x1e3\xc3y\x91\xb2z1\x9a\xd9am\xce\n\x16Q>\xfa{6H\xc3\x08M\xa7\xc5\x9cOy\xad\xdb!\x8di\x96\xe4\xda\x1d\x08\xa3z\xa1\x7f\xe5\x1b\xdb\xf2\xa2\xbd\xbe\x8b>\xecb@'\xc3\xd4\x92\r\xb4,\x0b"
-2.	Input Hash: 80961bfb3659064afe79af37b9de0cb6ea3b197541367a9b5081f0a4b37cf493
-	Script Signature: b'\xcd)\xe0\xf1\xc0\x90\xbeU\x14{\xe3\x11\xc1;%\x18f\xa4\xc2\xd0\x1a\x14D]\xc9{\x0ea\x92\x8e\x08\x7f^\xfa\x81bN\xfd\x02\x81\xf7\xb1}\x92\xc7\x8eJQ\x9c{#\nf\xe0(\xaf-\xf1\x8dQ\x04K\xc8\x0b'
-3.	Input Hash: 31776561cf009923ed4071f15c34f367fdfaa8131f55e70104517937e32b02b1
-	Script Signature: b'\x86\xb9\x1f;\x85\xa2;S\xff\x93pE\x93\xb1\x83eO\xbc\x8a\xca\x9e\xc9\x9f\xa8\x14\xe8\x0e\xf4\x87\xca\xc5\xe4\xc4\x95\xdeG\x94\xa1\x8a\x8b[pu\xc7\x92\xc9g\x00ck\xd8\xfe\xd3\x92\xa96\xec\xae\x014\xd2PD\x0e'
-4.	Input Hash: ae0976157ae9962b536c4d796fdab34dbe2b314fe00c359d51866cd3ca5a42a1
-	Script Signature: b'j6,F\xf1i61*\xb43\x11\xf2HF8\xc0\xe6)e\x04\x05\x1b\x16\xd0\xf3z\x1fur5e;\x0eM\x02>\xad\x80\x9e!^=\t\xea\xb6h\xbb\xc2\x07\xc1\x19\x7f\xefn\xa5O\xf4\xdc\xde\xb1<I\x01'
-5.	Input Hash: cfaf18ed0fca48c90ec94a6fc3a26d7711aac6e6d8cad211838170914c5869e4
-	Script Signature: b')\xa5\xb6S\x904\xf4\xeb}\r\xb3\xb2<\xd2\xe1\x0c\x10\xbf\x9a"\xd0\xb6\x11\x8bT4]A\xd5\x11^\'\x81oi\xab\x10\xdcvIM\x9f\x97/\x176\x15\x8d\xd4\xa7\xf6al\xd0\xed\xb6\xa3\x9e\xc3\xca\xcd\xc6f\x03'
-6.	Input Hash: 719dad178f52694cbcb5745f2b6d1e268e66415953e0a617f493db2a9a4fd80e
-	Script Signature: b')\xc0\xfb\xa5)M\xd6\xe0\x17\xbf\xc8x\xb3\xe7\xb4\x8e\xb5\x83^\xee q0\xd4\x8a\x1c\n\x8a\x935\x98q\xc1\x84.U\xca\x9c\x12\x00A\x17\xc2Q\xb0\x1b\xa6\xac\xda\x9bM\xa8\x9b\x7fD/G\xc3\x1fP\xa6\x7f?\x05'
+1.	Input Hash: GENERATED_HASH
+	Script Signature: None
 Output:
-	Script Pub Key: MULTIP2PK14678753393626973691138311263927260584246810806308242176861063821745638755669+27354760224906132510684886050438078468736485301946462253593308132083086234941
-	Value: 600
+	Script Pub Key: P2PK:24362407062370725107406283680917837866884396170697182824310105208624647384173+47672705051078067948313482515936774221058849447445695844673507851544750607557
+	Value: 100

@@ -21,7 +21,7 @@ class Transaction_Pool:
     
     def from_json_transactions(self):
         transactions = []
-        for transaction in self.list:
+        for transaction in self.list.copy():
             transactions.append(transaction)
         return transactions
 
@@ -51,8 +51,6 @@ class Transaction_Pool:
             if in_list == False:
                 double_spend = False
                 for transaction in block.block_transactions:
-                    # FOR DOUBLE SPEND <-------------------------------------------------
-                    # if any of the inputs hit, break
                     for input_transaction in transaction.inputs:
                         for input_pool in pool_transaction.inputs:
 

@@ -1,6 +1,6 @@
 import socket
 import threading
-import os
+import subprocess, os, platform
 from datetime import timedelta, datetime
 
 from Crypto.PublicKey import ECC
@@ -50,10 +50,6 @@ class Node:
 
         # for mining
         self.block_found = False 
-
-        # m_thread = threading.Thread(target=self.menu)
-        # m_thread.daemon = True
-        # m_thread.start()
 
         min_thread = threading.Thread(target=self.miner)
         min_thread.daemon = True
@@ -203,128 +199,6 @@ class Node:
                                 self.send_message(message)
                         except:
                             pass
-
-
-    def menu(self):
-        print('Waiting for block to be made')
-        while self.eligible == False:
-            pass
-        while True:
-            choice = input('Type one of the following choices:\n\t"T" to create a transaction\n\t"G" to generate 100 coins\n\t"A" to see your balance\n\t"U" to show the unspent transactions that you can spend:\n\t"K" to get your public key or "KS" for your secure key\n\t"M" to toggle mining on/off\n\t"B" to create and print Block\n\t"R" for the amount of time until the next round\n\t"S" to get the blockchain and last block: ')
-            if choice == "T":
-                self.utxo()
-                if not self.my_unspent:
-                    print('No transactions to use')
-                else:
-                    transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value = self.transaction_input()
-                    inputs = []
-                    for transaction in transaction_to_spend:
-                        transaction_hash = transaction.hash
-
-                        signer = eddsa.new(self.private_key, 'rfc8032')
-                        script_sig = signer.sign(str(transaction.to_json_complete()).encode('utf-8'))
-                        inputs.append(Transaction_Input(transaction_hash, script_sig))
-                    
-                    # Main Transaction
-                    transaction_main = Transaction(None,inputs,[Transaction_Output(script_pub_key, value)], datetime.now(), 'MAIN')
-                    self.last_transaction = transaction_main
-
-                    if isinstance(transaction_to_spend, list):
-                        count = 0
-                        for transaction in transaction_to_spend:
-                            verified = transaction_main.verify(transaction, self.unspent, count)
-                            count += 1
-                            if verified == False:
-                                break
-                    else:
-                        verified = transaction_main.verify(transaction_to_spend, self.unspent, 0)
-
-                    if verified == True:
-                        self.transaction_pool.add(transaction_main)
-                        prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
-                        self.transaction_messages.append(prefixed_message)
-                        self.send_message(prefixed_message)
-                        self.utxo()
-                        
-
-                        # Change Transaction
-                        remaining = to_spend_value - value - transaction_fee
-                        t = Transaction(None,inputs,[Transaction_Output("P2PK:" + self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
-                        if isinstance(transaction_to_spend, list):
-                            count = 0
-                            for transaction in transaction_to_spend:
-                                verified = t.verify(transaction, self.unspent, count)
-                                count += 1
-                                if verified == False:
-                                    break
-                        else:
-                            verified = t.verify(transaction_to_spend, self.unspent, 0)
-                        self.transaction_pool.add(t)
-                        prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                        self.transaction_messages.append(prefixed_message)
-                        self.send_message(prefixed_message)
-
-
-                        # Fee Transaction
-                        t = Transaction(None,[Transaction_Input(transaction_hash, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
-                        self.transaction_pool.add(t)
-                        prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                        self.transaction_messages.append(prefixed_message)
-                        self.send_message(prefixed_message)
-                    else:
-                        print("Transaction not verified")
-        
-
-            elif choice == 'G':
-                t = Transaction(None,[Transaction_Input("GENERATED_HASH", 'None')], [Transaction_Output("P2PK:" + self.pub_key_str, 100)], datetime.now(), 'GEN')
-                self.last_transaction = t
-                self.transaction_pool.add(t)
-                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                self.transaction_messages.append(prefixed_message)
-                self.send_message(prefixed_message)
-            
-            elif choice == "A":
-                self.utxo()
-                print('Balance is:', self.balance)
-            
-            elif choice == "U":
-                self.utxo()
-                counter = 1
-                print("Unspent Transactions:")
-                for transaction in self.my_unspent:
-                    print(counter, '.\t', transaction.to_json_complete())
-                    counter += 1
-
-            elif choice == "K":
-                print('Your public key is:', self.pub_key_str)
-            
-            elif choice == "KS":
-                address = self.pub_to_addr(self.pub_key_str)
-                print('Your secure key is:', address)
-                print('Is valid:', self.check_addr(address))
-                print('Public Key is:', self.addr_to_pub(address))
-
-            elif choice == "M":
-                if self.mining == False:
-                    self.mining = True
-                    print('Mining is turned on')
-                    if self.eligible == False:
-                        print('Not eligible to mine until the next round')
-                    print('Time till next: ', self.time_for_next_round - datetime.now())
-                elif self.mining == True:
-                    self.mining = False
-                    print('Mining is turned off')
-            
-            elif choice == "B":
-                b = Block.create(self.transaction_pool, 'None', self.pub_key_str)
-                print(b.to_json_complete())
-            
-            elif choice == "R":
-                print('Time till next: ', self.time_for_next_round - datetime.now())
-            
-            elif choice == "S":
-                print("\nThis is my Blockchain:\n\n", self.blockchain.to_json_compatible())
-                print("\nThis is the last block:\n\n", self.blockchain.head().to_json_complete())
 
 
     def miner(self):
@@ -723,6 +597,12 @@ class Node:
                 file.write(self.my_unspent[i].txt_format())
 
             file.close()
-            os.system('open -t text/unspent_transactions.txt')
+            filepath = 'text/unspent_transactions.txt'
+            if platform.system() == 'Darwin':       # macOS
+                subprocess.call(('open', filepath))
+            elif platform.system() == 'Windows':    # Windows
+                os.startfile(filepath)
+            else:                                   # linux variants
+                subprocess.call(('xdg-open', filepath))
         except:
             pass
