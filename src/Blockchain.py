@@ -4,13 +4,24 @@ from Block import *
 from datetime import datetime
 from hashlib import sha256
 
-# change datetime
+
 time = datetime.now()
 GENESIS_TIME = [time.year, time.month, time.day, time.hour, time.minute, time.second, time.microsecond]
 GENESIS_BLOCK = Block("GENESIS_HASH", None, None, GENESIS_TIME, 0, [])
 
 class Blockchain:
+    """Blockchain class is holds the personal blockchain of each node
+    
+    :ivar blockchain: List of the entire block.
+    :vartype blockchain: list of Block
+    """
+    
     def __init__(self, blockchain) -> None:
+        """innit
+
+        Args:
+            blockchain (list of Block): list of blocks
+        """
         if blockchain == None:
             self.blockchain = [GENESIS_BLOCK]
         else:
@@ -18,6 +29,14 @@ class Blockchain:
     
     ### UTILITY FUNCTIONS ###
     def add(self, block):
+        """Verifies prev_block_hash, hash_transaction and nonce, then adds the block.
+
+        Args:
+            block (object Block): block object
+
+        Returns:
+            bool: True if block is correct and has been added, False otherwise
+        """
         if self.blockchain[-1].block_hash != block.prev_block_hash:
             print('Invalid Block')
             return False
@@ -43,6 +62,11 @@ class Blockchain:
 
 
     def head(self):
+        """returns the head of the block
+
+        Returns:
+            Block: last block
+        """
         return self.blockchain[-1]
 
     def prev_block_hash(self):
@@ -52,6 +76,11 @@ class Blockchain:
 
     ### JSON FUNCTIONS ###
     def to_json_compatible(self):
+        """Returns json representation of blockchain
+
+        Returns:
+            dict: json representation of blockchain
+        """
         blockchain = []
         for block in self.blockchain:
             blockchain.append(block.to_json_complete())
@@ -60,6 +89,14 @@ class Blockchain:
             }
     @classmethod
     def from_json_compatible(cls, obj: dict):
+        """Creates blockchain from json representation
+
+        Args:
+            obj (dict): json representation of blockchain
+
+        Returns:
+            Blockchain: Blockchain
+        """
         new_blockchain = []
         for block in obj['blockchain']:
             new_blockchain.append(Block.from_json_compatible(block))
@@ -67,6 +104,11 @@ class Blockchain:
 
 
     def return_transactions(self):
+        """Returns all the transactions in the blockchain apart from the genesis block
+
+        Returns:
+            list of Transaction: all the transactions
+        """
         blockchain_transactions = []
 
         for i in range(1, len(self.blockchain)):

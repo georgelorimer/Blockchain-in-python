@@ -5,8 +5,39 @@ from Transaction import *
 import subprocess, os, platform
 
 class Block:
+    """Block contains all the attributes of a block
+
+    :ivar block_hash: The hash of the entire block.
+    :vartype block_hash: str
+    :ivar prev_block_hash: The hash of the last block.
+    :vartype prev_block_hash: str
+    :ivar hash_of_transaction: The hash of the transactions.
+    :vartype hash_of_transaction: str
+    :ivar time: The time stamp of the block, when it was made.
+    :vartype time: list of int
+    :ivar nonce: The number that when hashed with the block, the block_hash is below the threshold.
+    :vartype nonce: int
+    :ivar block_transactions: The list of all the transactions of the block.
+    :vartype block_transactions: list of Transaction
+    :ivar target: The size of the threshold.
+    :vartype target: int
+    :ivar threshold: The amount of 0s a block hash needs to start with.
+    :vartype threshold: str
+
+    """
+
     
     def __init__(self, block_hash, prev_block_hash, hash_of_transaction, time, nonce, block_transactions):
+        """innit
+
+        Args:
+            block_hash (str): The hash of the entire block.
+            prev_block_hash (str): The hash of the last block.
+            hash_of_transaction (str): The hash of the transactions.
+            time (list of int): The time stamp of the block, when it was made.
+            nonce (int): The number that when hashed with the block, the block_hash is below the threshold.
+            block_transactions (list of Transaction): The list of all the transactions of the block.
+        """
         # Header
         self.block_hash = block_hash
         self.prev_block_hash = prev_block_hash
@@ -24,6 +55,16 @@ class Block:
 
     @classmethod
     def create(cls, transaction_pool, prev_block_hash, creator):
+        """Returns a block object.
+
+        Args:
+            transaction_pool (Transaction_Pool): copy of the transaction pool
+            prev_block_hash (str): hash of the previos block
+            creator (str): pub_key_string of the creator of the block
+
+        Returns:
+            Block: Block object
+        """
 
         transactions = transaction_pool.from_json_transactions()
         fee = 0
@@ -45,7 +86,8 @@ class Block:
         return cls(None, prev_block_hash, hash_of_transaction, time, 0, transactions)
 
     def proof_of_work(self):
-        
+        """Creates the hash by incrementing the nonce, hashing the block and checking if it meets the threshold requirements
+        """
         
         found = False
         starttime = datetime.now()
@@ -64,9 +106,12 @@ class Block:
 
         self.block_hash = hashed
 
-    # def verify
-
     def to_json_header(self):
+        """Returns a json representation of the header
+
+        Returns:
+            dict: Json representation of the header
+        """
         return {
             'prev_block_hash': self.prev_block_hash,
             'hash_of_transaction': self.hash_of_transaction,
@@ -75,6 +120,11 @@ class Block:
         }
 
     def to_json_complete(self):
+        """Returns a json representation of the entire block
+
+        Returns:
+            dict: json representation of the entire block
+        """
         transactions = []
         for transaction in self.block_transactions:
             transactions.append(transaction.to_json_complete())
@@ -86,6 +136,14 @@ class Block:
 
     @classmethod
     def from_json_compatible(cls, obj:dict):
+        """Turns json representation into an object
+
+        Args:
+            obj (dict): json representation of a block
+
+        Returns:
+            Block: object
+        """
         block_hash = obj['hash_pointer']
         header = obj['header']
         prev_block_hash = header['prev_block_hash']
@@ -101,6 +159,11 @@ class Block:
         return cls(block_hash, prev_block_hash, hash_of_transaction, time, nonce, block_transactions)
     
     def txt_format(self):
+        """Returns block into a .txt format
+
+        Returns:
+            str: block.txt
+        """
         winner = self.block_transactions[0].outputs[0].script_pub_key.split(':')
         pk = winner[1]
         h_text = 'Block Explorer\n' + 'Header:\n\tHash: '+self.block_hash+'\n\tHash of previos block: '+self.prev_block_hash+'\n\tHash of Transactions: '+self.hash_of_transaction+'\n\tTime Stamp: '+str(self.time)+'\n\tNonce: '+str(self.nonce)+'\n\tBlock Reward: 50\n\tTransaction Fee: '+str(self.block_transactions[0].outputs[0].value - 50)+'\n\tBlock creator: '+pk
@@ -113,12 +176,14 @@ class Block:
         return b_text
         
     def to_txt(self):
+        """Creates the file: block_file.txt and opens it
+        """
         text = self.txt_format()
-        file = open('../text/block_file.txt', 'w')
+        file = open('text/block_file.txt', 'w')
         file.write(text)
         file.close()
         
-        filepath = '../text/block_file.txt'
+        filepath = 'text/block_file.txt'
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', filepath))
         elif platform.system() == 'Windows':    # Windows

@@ -8,8 +8,12 @@ from datetime import datetime
 from Node import Node
 
 class Gui:
+    """Class for the Graphical User Interface
+    """
 
     def __init__(self) -> None:
+        """Creates the Menu bar and root
+        """
         self.open_frame = None
         self.connect_message = None
         self.transaction_message = None
@@ -55,6 +59,8 @@ class Gui:
     #### CONNECT FRAME ####
 
     def enter(self):
+        """Creates the login frame
+        """
 
         self.login_frame = LabelFrame(self.root, text = 'Connect')
         self.login_frame.grid(row=1, column= 0,columnspan=6)
@@ -84,6 +90,8 @@ class Gui:
         msg = Label(self.login_frame, text = self.connect_message).grid(row=4, column=0, columnspan=2)
 
     def start(self):
+        """Tries to create a Node object or throws error messages
+        """
         try:
             port = self.port_input.get()
             if self.opt_but['text'] == "YES":
@@ -112,6 +120,8 @@ class Gui:
 
     #### MAIN FRAME ####
     def main_frame_open(self):
+        """Creates the Main frame, second frame and the scrollbar
+        """
         self.main_frame = Frame(self.root, pady=10, padx=10)
         self.main_frame.grid(row=1, columnspan=6, sticky= 'nsew')
         self.main_canvas = Canvas(self.main_frame)
@@ -132,6 +142,9 @@ class Gui:
     #### HOME FRAME ####
 
     def home_op(self):
+        """Creates the home page
+        """
+
         self.node.utxo()
         self.delete_frame()
 
@@ -202,6 +215,8 @@ class Gui:
     #### TRANSACTION FRAME ####
 
     def transaction_op(self):
+        """Creates the transaction page
+        """
         self.delete_frame()
         self.node.utxo()
 
@@ -220,6 +235,8 @@ class Gui:
 
         unspent_btn = Button(self.transaction_frame, text= 'Unspent transactions', command=self.node.unspent_to_txt)
         unspent_btn.grid(row=1, column=1)
+        if self.node.my_unspent == None or len(self.node.my_unspent) == 0:
+            unspent_btn['state'] = DISABLED
 
         unspent_btn = Button(self.transaction_frame, text= 'Create a transaction', command=self.c_transaction_op, state=NORMAL)
         unspent_btn.grid(row=1, column=2)
@@ -254,6 +271,8 @@ class Gui:
     #### CREATE TRANSACTIONS ####
 
     def c_transaction_op(self):
+        """Creates the "Create a transaction" page
+        """
         self.node.utxo()
         self.my_unspent = self.node.my_unspent.copy()
         self.to_spend_value = 0
@@ -299,6 +318,11 @@ class Gui:
         
     #### DETAILS FRAME ####
     def d_transaction_op(self, choice):
+        """Creates the transaction details page
+
+        Args:
+            choice (str): Script choice of the transaction
+        """
         self.delete_frame()
         self.choice = choice
         self.d_transaction_frame = Frame(self.second_frame)
@@ -337,6 +361,8 @@ class Gui:
 
     #### BLOCK EXPLORER FRAME ###
     def be_op(self):
+        """Creates the block explorer page
+        """
         self.root.geometry('550x300')
         self.delete_frame()
         self.be_frame = Frame(self.second_frame)
@@ -364,6 +390,8 @@ class Gui:
 
     #### OTHER FRAME ####
     def other_op(self):
+        """Creates the other page
+        """
         self.delete_frame()
 
         self.other_frame = Frame(self.second_frame, pady=10)
@@ -383,10 +411,14 @@ class Gui:
         self.priv.pack()
     
     def regenerate_keys(self):
+        """Regenerates the keys of the user
+        """
         self.node.regenerate_keys()
         self.other_op()
     
     def private_key(self):
+        """Shows the private key in the other page
+        """
         if self.priv['text'] == 'Show Private key':
             self.privk = Text(self.other_frame, width=25, height=4)
             self.privk.insert(1.0, str(int.from_bytes(self.node.private_key.seed, 'big')))
@@ -401,6 +433,8 @@ class Gui:
     #### UTLITY FUNCTIONS ####
 
     def delete_frame(self):
+        """Deletes the open frame to allow another to open
+        """
         for button in self.menu_buttons:
             button['state'] = NORMAL
         if self.node.eligible == False:
@@ -408,6 +442,12 @@ class Gui:
         self.open_frame.destroy()
 
     def flip_opt(self, button, widg):
+        """Flips options of a button
+
+        Args:
+            button (Button): button to flip
+            widg (widget): the witget to change state
+        """
         if button['text'] == 'NO':
             widg['state'] = NORMAL
             button['text'] = 'YES'
@@ -423,6 +463,8 @@ class Gui:
             self.node.mining = True
     
     def flip_choice(self):
+        """Flip the script choice button
+        """
         for b in self.t_btns:
             b['state'] = NORMAL
         self.to_spend_value = 0
@@ -444,6 +486,11 @@ class Gui:
             self.transactions_to_send = []
 
     def select_transaction(self, i):
+        """Selects the transaction(s) to be used in the transaction
+
+        Args:
+            i (int): counter of which button was selected
+        """
         self.confirm_button['state'] = NORMAL
         if self.choice['text'] == 'P2PK' or self.choice['text'] == 'P2PKS':
             for btn in self.t_btns:
@@ -461,6 +508,11 @@ class Gui:
             self.amount_label['text'] = 'Amount To spend: '+ str(self.to_spend_value)
 
     def select_block(self, i):
+        """Creates the bloxk details page
+
+        Args:
+            i (int): counter of which block was pressed
+        """
         block = self.blockchain[i]
 
 
@@ -521,6 +573,17 @@ class Gui:
 
 
     def transaction_details(self, script_public_key, value, transaction_fee, choice):
+        """Creates a transaction
+
+        Args:
+            script_public_key (str): recipiant key/address
+            value (str): value of the new transaction
+            transaction_fee (str): value of the transaction fee
+            choice (str): Script choice of new transaction
+
+        Returns:
+            bool: whether the transaction was sent correctly
+        """
         try:
             spk = script_public_key.split('*')
             if transaction_fee == 'x':
@@ -556,13 +619,15 @@ class Gui:
             self.d_transaction_op(choice)
 
     def exit(self):
+        """Exit button, sends EXIT message to peers
+        """
         self.node.send_message('EXIT:'+str(datetime.now()))
-
-
         self.root.quit()
     
     def manual(self):
-        filepath = '../text/Greckle_Manual.pdf'
+        """Opens the Manual
+        """
+        filepath = 'text/Greckle_Manual.pdf'
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', filepath))
         elif platform.system() == 'Windows':    # Windows

@@ -18,10 +18,63 @@ from Block import *
 from Blockchain import *
 
 class Node:
+    """Node class stores the attributes required for the p2p network and blockchain
+
+    :ivar gui: Gui object for exit
+    :vartype gui: Gui
+    :ivar port: port that node is connected to
+    :vartype port: int
+    :ivar sock: port socket
+    :vartype sock: socket
+    :ivar peers: list of peers
+    :vartype peers: list of int
+    :ivar transaction_messages: list of messages in system
+    :vartype transaction_messages: list of str
+    :ivar peer_ports: list of peer ports
+    :vartype peer_ports: list of int
+    :ivar peer_dict: dictionary connecting peer:port
+    :vartype peer_dict: dict
+    :ivar balance: acount balance
+    :vartype balance: int
+    :ivar unspent: unspent transactions in the system
+    :vartype unspent: list of Transaction
+    :ivar my_unspent: my unspent transactions
+    :vartype my_unspent: list of transactions
+    :ivar last_transaction: last transaction sent in system
+    :vartype last_transaction: str
+    :ivar event_messages: message to be shown on gui.home
+    :vartype event_messages: str
+    :ivar transaction_pool: transaction pool of node
+    :vartype transaction_pool: Transaction
+    :ivar private_key: private key of user
+    :vartype private_key: Key
+    :ivar public_key: public key of the user
+    :vartype public_key: Key
+    :ivar pub_key_str: string representation of the public key
+    :vartype pub_key_str: str
+    :ivar blockchain: Blockchain object, personal copy of the blockchain
+    :vartype blockchain: Blockchain
+    :ivar eligible: bool if the block is eligible to send transactions
+    :vartype eligible: bool
+    :ivar mining: bool toggle mining on/off
+    :vartype mining: bool
+    :ivar block_found: bool whether a new block has been found or not
+    :vartype block_found: str
+    
+
+    """
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def __init__(self, port, connection, gui):
+        """innit
+
+        Args:
+            port (int): port to connect to
+            connection (int): port of peer to connect to
+            gui (Gui): Gui for the exit function
+        """
         self.gui = gui
         self.port = port
         self.sock.bind(('127.0.0.1', port))
@@ -68,6 +121,8 @@ class Node:
     #### LOOPING FUNCTIONS ####
 
     def listen(self):
+        """Listens for connections and creates new thread for each connection
+        """
         print(f'Peer running on port {self.port}')
         while True:
             c, a = self.sock.accept()
@@ -81,6 +136,18 @@ class Node:
 
  
     def handler(self, c, a):
+        """Handles all of the messages in the system
+
+        TRANSACTION - For recieving new transactions
+        BLOCK- For recieving new blocks
+        CHAIN - For recieving a chain
+        PORT - For connecting to the new port number
+        EXIT - For checking which socket has left the system
+
+        Args:
+            c (socket): new socket object
+            a (list): remote address
+        """
         message_q = []
         while True:
             try:
@@ -218,6 +285,10 @@ class Node:
 
 
     def miner(self):
+        """Mining tries to create a new block when the new round begins.
+        It attempts to beet the other nodes in creating a valid block.
+        If it wins it will add the block to their personal chain and then send it across the p2p network
+        """
         while True:
             
             if self.mining == True and datetime.now() > self.time_for_next_round and self.eligible == True:
@@ -245,101 +316,10 @@ class Node:
                     self.block_found = False
 
     #### MENU FUNCTIONS ####
-    def transaction_input(self):
-        self.utxo()
-        tried = False
-        while tried == False:
-            # try:
-            script_choice = input('How do you want to send your coins?\n\t"P2PK" to pay to pub_key\n\t"P2PKS" to pay to pub_key with a checksum\n\t"MULTIP2PK" to pay multiple transactions to pub_key: ')
-            if script_choice == "P2PK" or script_choice == "P2PKS":
-                while transaction_to_spend == None:
-                    counter = 1
-                    print("Unspent Transactions:")
-                    for transaction in self.my_unspent:
-                        print(counter, '.\t', transaction.to_json_complete())
-                        counter += 1
-                    transaction_choice = int(input('Choose your transaction to spend: '))
-                    if transaction_choice in range(1, len(self.my_unspent)+1):
-                        transaction_to_spend = self.my_unspent[transaction_choice - 1]
-                        to_spend_value = transaction_to_spend.outputs[0].value
-                    else:
-                        transaction_to_spend = None
-                        print("Not an option")
-            
-            elif script_choice == "MULTIP2PK":
-                transaction_to_spend = []
-                
-                while transaction_to_spend == []:
-                    to_spend_value = 0
-                    print("Select a transction to spend by typing the number next to it, when you have selected all the transactions you want to use, enter 'x'")
-                    print('Unspent Transactions:')
-                    counter = 1
-                    for transaction in self.my_unspent:
-                        print(counter, '.\t', transaction.to_json_complete())
-                        counter += 1
-                    
-                    completed = False
-                    while completed == False:
-                        print('Current amount to spend:', to_spend_value)
-                        transaction_choice = input('Choose your transaction to spend: ')
-                    
-                        if transaction_choice == 'x':
-                            if len(transaction_to_spend) == 0:
-                                print('Please select at least 1 transaction to spend')
-                            else:
-                                completed = True
-                        
-                        else:
-                            transaction_choice = int(transaction_choice)
-                            if transaction_choice in range(1, len(self.my_unspent)+1):
-                                transaction_choice_t = self.my_unspent[transaction_choice - 1]
-                                if transaction_choice_t in transaction_to_spend:
-                                    print('Please pick a transaction you have not already selected')
-                                else:
-                                    transaction_to_spend.append(transaction_choice_t)
-                                    to_spend_value += transaction_choice_t.outputs[0].value
-                                    print(transaction_to_spend)
-                                    print(transaction_choice_t.to_json_complete())
-
-
-            else:
-                print('Not a valid choice')
-                tried == False
-                continue
-            
-            
-            script_pub_key = input('Enter the public key of the desired recipient: ')
-
-            if script_choice == "P2PKS":
-                if self.check_addr(script_pub_key) == True:
-                    pass
-                else:
-                    print('Secure key not valid')
-                    continue
-
-            script_pub_key = script_choice + ':' + script_pub_key
-            
-            value = None
-            while value == None:
-                value = int(input("Amount to spend (Transaction amount: "+str(to_spend_value) +"): "))
-                if value < to_spend_value and value > 0:
-                    transaction_fee = int(input("Transaction fee: "))
-                    if transaction_fee > 0 and (transaction_fee + value) < to_spend_value:
-                        tried = True
-                        pass
-                    else:
-                        value = None
-                        
-                else:
-                    value = None
-                    print('incorrect value')
-            # except:
-            #     print('Incorrect details')
-            #     tried = False
-        
-        return transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value
-
     def gen_coins(self):
+        """Generates 100 coins for the user
+        """
+
         t = Transaction(None,[Transaction_Input("GENERATED_HASH", 'None')], [Transaction_Output("P2PK:" + self.pub_key_str, 100)], datetime.now(), 'GEN')
         self.last_transaction = t
         self.transaction_pool.add(t)
@@ -350,6 +330,18 @@ class Node:
         self.event_messages = 'You Generated 100 Greckles!'
     
     def transaction_maker(self, transaction_to_spend, script_pub_key, value, transaction_fee, to_spend_value):
+        """Creates a transaction, the change transaction and the fee transaction
+
+        Args:
+            transaction_to_spend (list of Transaction or Transaction): the selected transaction(s) to send
+            script_pub_key (str): script_pub_key of the transactions
+            value (int): value of the new main transaction
+            transaction_fee (int): the value of the transaction fee
+            to_spend_value (int): sum of the values of the transactions in transaction_to_spend
+
+        Returns:
+            bool: transaction creation succesful
+        """
         inputs = []
         for transaction in transaction_to_spend:
             transaction_hash = transaction.hash
@@ -414,6 +406,11 @@ class Node:
     #### UTILITY FUNCTIONS ####
 
     def connect_to_peer(self, peer_port):
+        """Connect to a peer via a port number
+
+        Args:
+            peer_port (int): port to connect to
+        """
         peer_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         peer_sock.connect(('127.0.0.1', peer_port))
         self.peers.append(peer_sock)
@@ -424,6 +421,11 @@ class Node:
         print(f'Connected to peer at port {peer_port}')
 
     def send_message(self, message):
+        """Sends a message to all peers and removes broken connections
+
+        Args:
+            message (str): message to send
+        """
         message = message + "€"
         broken_connections = []
         for peer in self.peers:
@@ -454,11 +456,15 @@ class Node:
                     pass
 
     def generate_keys(self):
+        """Generates the keys for the node
+        """
         self.private_key = ECC.generate(curve='ed25519')
         self.public_key = self.private_key.public_key()
         self.pub_key_str = str(self.public_key.pointQ.x) + '+' + str(self.public_key.pointQ.y)
 
     def regenerate_keys(self):
+        """Regenerates new keys and sends the nodes unspent transactions to the new key
+        """
         self.utxo()
         new_private_key = ECC.generate(curve='ed25519')
         new_public_key = new_private_key.public_key()
@@ -503,6 +509,8 @@ class Node:
 
 
     def utxo(self):
+        """Updates the balance, unspent and my unspent by checking the transactions in the blockchain and transaction pool.
+        """
         while not self.blockchain:
             pass
 
@@ -560,6 +568,14 @@ class Node:
 
     #### KEY SECURE FUNCTIONS 
     def pub_to_addr(self, key):
+        """Turns the public key into a secure public key/address
+
+        Args:
+            key (str): pub_key_str
+
+        Returns:
+            str: public key secure
+        """
         pub_array = key.split('+')
         intx = int(pub_array[0])
         inty = int(pub_array[1])
@@ -578,6 +594,14 @@ class Node:
         return address
     
     def check_addr(self, addr):
+        """Checks the address checksum is correct for the rest of the address
+
+        Args:
+            addr (str): address
+
+        Returns:
+            bool: the address is valid
+        """
         addr_split= addr.split('+')
 
         check_string = addr_split[0] + '+' + addr_split[1] + '+'
@@ -590,6 +614,14 @@ class Node:
             return False
     
     def addr_to_pub(self, addr):
+        """Turns the address back into the public key
+
+        Args:
+            addr (str): public key secure
+
+        Returns:
+            str: pub_key_str
+        """
         addr_array = addr.split('+')
         bytex = base58.b58decode(addr_array[0].encode('utf-8'))
         bytey = base58.b58decode(addr_array[1].encode('utf-8'))
@@ -603,10 +635,12 @@ class Node:
 
 
     def unspent_to_txt(self):
+        """Creates a .txt file that outputs the unspent transactions
+        """
         try:
-            os.remove('../text/unspent_transactions.txt')
+            os.remove('text/unspent_transactions.txt')
             self.utxo()
-            file = open('../text/unspent_transactions.txt', 'w')
+            file = open('text/unspent_transactions.txt', 'w')
             file.write('Unspent Transactions:')
             for i in range(len(self.my_unspent)):
                 file.write('\n------------------------------------------------------------------------------\n')
@@ -614,7 +648,7 @@ class Node:
                 file.write(self.my_unspent[i].txt_format())
 
             file.close()
-            filepath = '../text/unspent_transactions.txt'
+            filepath = 'text/unspent_transactions.txt'
             if platform.system() == 'Darwin':       # macOS
                 subprocess.call(('open', filepath))
             elif platform.system() == 'Windows':    # Windows
