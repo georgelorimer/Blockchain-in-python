@@ -90,17 +90,12 @@ class Block:
         """
         
         found = False
-        starttime = datetime.now()
         
         while found == False:
             toHash = str(self.to_json_header())
             hashed = sha256(toHash.encode('utf-8')).hexdigest()
             if hashed.startswith(self.threshold):
-                endtime = datetime.now()
                 found = True
-                print (endtime - starttime)
-                print (hashed)
-                print (self.nonce)
             else:
                 self.nonce += 1
 

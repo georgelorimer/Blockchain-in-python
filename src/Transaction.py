@@ -180,7 +180,6 @@ class Transaction:
 
         elif inp_key_array[0] == "P2PKS":
             if self.check_addr(inp_key_array[1]) == False:
-                print('Secure key not valid')
                 return False
             input_key = self.addr_to_pub(inp_key_array[1])
         else:
@@ -198,10 +197,8 @@ class Transaction:
         verifier = eddsa.new(pub, 'rfc8032')
         try:
             verifier.verify(message, signature)
-            print("The message is authentic")
             return True
         except ValueError:
-            print("The message is not authentic")
             return False
 
         # ammounts for from transaction
@@ -217,10 +214,8 @@ class Transaction:
         """
         if self.type == 'MAIN':
             if input_transaction not in unspent:
-                print('This transaction is already spent')
                 return False
             else:
-                print('This transaction has not yet been spent')
                 return True
 
 

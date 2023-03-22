@@ -123,7 +123,6 @@ class Node:
     def listen(self):
         """Listens for connections and creates new thread for each connection
         """
-        print(f'Peer running on port {self.port}')
         while True:
             c, a = self.sock.accept()
 
@@ -132,7 +131,6 @@ class Node:
             c_thread.start()
             
             self.peers.append(c)
-            print(f'Connected to peer at {a[0]}:{a[1]}')
 
  
     def handler(self, c, a):
@@ -205,7 +203,6 @@ class Node:
 
                         
                         if verified == True:
-                            print('Success')
                             self.transaction_pool.add(transaction)
                             self.utxo()
                             if transaction in self.my_unspent and transaction.type == 'MAIN':
@@ -292,7 +289,6 @@ class Node:
         while True:
             
             if self.mining == True and datetime.now() > self.time_for_next_round and self.eligible == True:
-                print('mining...')
                 b = Block.create(self.transaction_pool, self.blockchain.prev_block_hash(), self.pub_key_str)
                 if self.block_found == False:
                     
@@ -303,7 +299,6 @@ class Node:
 
                     added = self.blockchain.add(b)
                     if added == True:
-                        print("\n\n\n I Won \n\n\n")
                         self.transaction_pool.update_from_block(b)
 
                         date = b.time
@@ -312,7 +307,6 @@ class Node:
                         self.utxo()
                         self.event_messages = 'You mined a new block and recieved '+str(b.block_transactions[0].outputs[0].value)+' Greckles!'
                 elif self.block_found == True:
-                    print("\n\n\n I LOST \n\n\n")
                     self.block_found = False
 
     #### MENU FUNCTIONS ####
@@ -400,7 +394,6 @@ class Node:
             self.event_messages = 'You sent '+str(transaction_main.outputs[0].value)+' Greckles!'
             return True
         else:
-            print("Transaction not verified")
             return False
 
     #### UTILITY FUNCTIONS ####
@@ -418,7 +411,6 @@ class Node:
         self.peer_dict[peer_sock] = peer_port
         message = "PORT:" + str(self.port) + '€'
         peer_sock.send(bytes(message, 'utf-8'))
-        print(f'Connected to peer at port {peer_port}')
 
     def send_message(self, message):
         """Sends a message to all peers and removes broken connections
@@ -553,8 +545,6 @@ class Node:
                     output_key = out_key_array[1]
                 
                 if out_key_array[0] == "P2PKS":
-                    if self.check_addr(out_key_array[1]) == False:
-                        print('Secure key not valid')
                     output_key = self.addr_to_pub(out_key_array[1])
 
                 if output_key == self.pub_key_str:

@@ -54,7 +54,6 @@ class Blockchain:
             json_transactions.append(transaction.to_json_complete())
 
         if block.hash_of_transaction != sha256(str(json_transactions).encode('utf-8')).hexdigest():
-            print('Transaction hash not valid')
             return False
 
         self.blockchain.append(block)
