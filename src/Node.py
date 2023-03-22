@@ -2,8 +2,10 @@
 
 import socket
 import threading
+import sys
 import subprocess, os, platform
 from datetime import timedelta, datetime
+import time as tim
 from hashlib import sha256
 
 from Crypto.PublicKey import ECC
@@ -19,7 +21,8 @@ class Node:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    def __init__(self, port, connection):
+    def __init__(self, port, connection, gui):
+        self.gui = gui
         self.port = port
         self.sock.bind(('127.0.0.1', port))
         self.sock.listen(5)
@@ -97,7 +100,6 @@ class Node:
             else:
                 str_data = message_q[0]
                 message_q.pop(0)
-
 
             if str_data.startswith("TRANSACTION"):
 
@@ -201,6 +203,15 @@ class Node:
                                 self.send_message(message)
                         except:
                             pass
+            
+            elif str_data.startswith('EXIT'):
+                if str_data not in self.transaction_messages:
+                    self.transaction_messages.append(str_data)
+                    tim.sleep(0.5)
+                    self.send_message(str_data)
+                    if self.eligible == False:
+                        self.gui.root.quit()
+
 
 
     def miner(self):

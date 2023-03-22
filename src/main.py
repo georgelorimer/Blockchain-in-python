@@ -28,22 +28,23 @@ class Gui:
 
         self.block_explorer = Button(self.root, text='Block Explorer', state=DISABLED, command=self.be_op)
         self.menu_buttons.append(self.block_explorer)
-
-        self.attacks = Button(self.root, text='Attacks', state=DISABLED)
-        self.menu_buttons.append(self.attacks)
+        
 
         self.other = Button(self.root, text='Other', state=DISABLED, command=self.other_op)
         self.menu_buttons.append(self.other)
 
-        self.manual = Button(self.root, text='Manual', state=DISABLED)
+        self.manual = Button(self.root, text='Manual')
         self.menu_buttons.append(self.manual)
+
+        self.exit = Button(self.root, text='Exit', width=5, command=self.exit)
+        self.menu_buttons.append(self.exit)
 
         self.home.grid(row=0, column=0)
         self.transactions.grid(row=0, column=1)
         self.block_explorer.grid(row=0, column=2)
-        self.attacks.grid(row=0, column=3)
-        self.other.grid(row=0, column=4)
-        self.manual.grid(row=0, column=5)
+        self.other.grid(row=0, column=3)
+        self.manual.grid(row=0, column=4)
+        self.exit.grid(row=0, column=5)
 
         self.enter()
 
@@ -90,7 +91,7 @@ class Gui:
             elif self.opt_but['text'] == "NO":
                 peer = None
             
-            self.node = Node(int(port),peer)
+            self.node = Node(int(port),peer, self)
 
             self.main_frame_open()
             self.home_op()
@@ -404,7 +405,6 @@ class Gui:
             button['state'] = NORMAL
         if self.node.eligible == False:
             self.transactions['state'] = DISABLED
-            self.attacks['state'] = DISABLED
         self.open_frame.destroy()
 
     def flip_opt(self, button, widg):
@@ -552,6 +552,12 @@ class Gui:
         except:
             self.transaction_message = 'Input Error, Please Try Again.'
             self.d_transaction_op(choice)
+
+    def exit(self):
+        self.node.send_message('EXIT:'+str(datetime.now()))
+
+
+        self.root.quit()
 
 
 Gui()
