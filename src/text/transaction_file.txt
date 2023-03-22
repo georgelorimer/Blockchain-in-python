@@ -1,19 +1,11 @@
-Transaction: 8056c5b079cbb5ddf3349133221c1880d53eacb03f63eb484e438c96fe023359
-Value: 425
-Timestamp: 2023-03-22 09:56:46.088442
-Type: MAIN
+Transaction: 64341792d9e5d20b74ca1bff01cec869bed9d8f797073c0c415a1d4fba9d8a6d
+Value: 100
+Timestamp: 2023-03-22 12:12:16.638512
+Type: GEN
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Inputs: 
-1.	Input Hash: 98a8868a861e5ae4eb67e9d91a6a8bdb6f7ae932dfd18bb5715b9492b2cf1e23
-	Script Signature: b'(\x98g\xcfm\xbe\x07\x9fAQ\x11#5%\xe9C\xede\xa5g\xa8\xa7\xb0\xebLL\xe9n\x9ah\xa7\x84\x112\xebu\xa7\xc7\x1e\xf0\x98B=\xe9\xb3\xf4G\x8a\x00\x91\xc0\xe3C-\xda\xb2"\x1e\xec\xeb\'?\xe2\x08'
-2.	Input Hash: e9154f0ac5e600bdbca5da5bc045b7ef148437d11c66b294e750921be9c7f0b8
-	Script Signature: b'\xff\xf5\xba"\xbd\xbf])F\x8f\xa3\x08\xc9\xc9\xf5(\xe63\xaa\xc1ed_\x04?\x1a\nl\x95\xf2\xe2\x17\x10\r\xe8r\xb9\x0b#N\x19Rx\xba)\xa3Ja\x0c\xa2l\x1c\xfc\xa9_duI\xc5h\xe6\xd2\t\x03'
-3.	Input Hash: 55297e4faeb24cde867ff1ef02c86ed1f87cb2733d08dd52c4d03b9709bd666e
-	Script Signature: b'\xd04\xae\xbe\x0b)u&c&\xe2n^7\xe2\x90_\x94\x8eom&\xb0\x7f\x8c)Y7\xa3\x06\x1ai\xb2\x9b\x17}e\xc6ps\x049\x04\xdfq>(\x19D\x12\xcf\n\xa1\xd7;|\xacd\xa90Z\xc7\x06\x04'
-4.	Input Hash: ad9acb379cd79a9b2814387e934c79048cf8ff98b98f9c24e5aa41ef1347c75b
-	Script Signature: b'5\xba\xccJ:t\x92c\xebz\xe5\xd0\xc0R\x8aAM\xa1-T\xb4\xe9\x82>\xedv\xf1\x92\xe4H\x9e\xbb\x8e;\xa0c\xa6\x19\xc2e\xa6B\xe8D\x8c\xb6yX\xc4r\xf95\xee\xb9W7\x1d\xcbR3\xf1\xe75\r'
-5.	Input Hash: fdb3e2cf6c66ee0651810feea7f03e073cd9c3478ed4f82de23d535912398205
-	Script Signature: b'\xb6k\x96\xd3\xa8\xfa\xf6\xad#Y\xd1\xea\x9a\x16\xed\xc3\xc8(\x01F\x9f\xbc#\xadIV\xbd\r\xcf\xef\xaf\xcc\x95\x8fD\x92e\x7f\xeb2\xb5\xbaZ\x88\x1f.wi\xad%m1\x8d?d8\xf6\xebM-I\x11\x08\x06'
+1.	Input Hash: GENERATED_HASH
+	Script Signature: None
 Output:
-	Script Pub Key: MULTIP2PK:30797331747365109969104243077067360211074377633025973494287483537328829213406+19043400353659514804346305286046735936458597958496442710861790453942217374228
-	Value: 425
+	Script Pub Key: P2PK:43709334862351601162357943311723358787406984478295411399817178374951719327650+5281664588844780977977167140835002582587987180064409226888286365212114014189
+	Value: 100

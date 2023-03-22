@@ -158,13 +158,13 @@ class Gui:
         pk_lable = Label(self.home_frame, text='Public Key:')
         pk_lable.grid(row=2, column=0)
         pk_out = Text(self.home_frame, width= 50, height=4)
-        pk_out.insert(1.0, self.node.pub_key_str)
+        pk_out.insert(1.0, self.node.pub_key_str +'*')
         pk_out.grid(row=2, column=1)
 
         pks_lable = Label(self.home_frame, text='Secure Public Key:')
         pks_lable.grid(row=3, column=0)
         pks_out = Text(self.home_frame, width=50, height=2)
-        pks_out.insert(1.0, self.node.pub_to_addr(self.node.pub_key_str))
+        pks_out.insert(1.0, self.node.pub_to_addr(self.node.pub_key_str) + '*')
         pks_out.grid(row=3, column=1)
 
         opt_label = Label(self.home_frame, text='Mining:')
@@ -521,6 +521,7 @@ class Gui:
 
     def transaction_details(self, script_public_key, value, transaction_fee, choice):
         try:
+            spk = script_public_key.split('*')
             if transaction_fee == 'x':
                 transaction_fee = 0
             
@@ -534,7 +535,7 @@ class Gui:
                 self.transaction_message = 'Incorrect values, Please Try again'
                 self.d_transaction_op(choice)
             else:
-                success = self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+script_public_key), int(value), int(transaction_fee), int(self.to_spend_value))
+                success = self.node.transaction_maker(self.transactions_to_send, str(self.choice+':'+spk[0]), int(value), int(transaction_fee), int(self.to_spend_value))
                 self.delete_frame()
                 self.success_frame = Frame(self.second_frame, pady=10)
                 self.success_frame.pack(fill= BOTH, expand = 1)
