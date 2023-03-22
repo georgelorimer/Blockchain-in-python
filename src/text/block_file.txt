@@ -1,52 +1,26 @@
 Block Explorer
 Header:
-	Hash: 00000842b59aee02e5a5b7cc3878f6ea31c99335974ecde0b8259ebfe385c7b5
-	Hash of previos block: 00000ac47d503424affd8ac11f1e8ddaf93421400b02ca90d326147ce6ecc098
-	Hash of Transactions: 56fbde4583447087c7e319118ad99f84717cefaa7a299b6737577e08d8b1b39b
-	Time Stamp: [2023, 3, 22, 13, 36, 1, 866990]
-	Nonce: 778403
+	Hash: 000007e6a0fafb0b007b4f34fdf150e671a6a5565f0d1cda3d467f5e298776d0
+	Hash of previos block: 000009eb54ff59cb0bc2675a502d0c53579c45d93162794f4aa4181ce03a8280
+	Hash of Transactions: 8c0947c5fa4569ff5f9f66e4d27b06b8bf833243e41c0e3667227e707227279b
+	Time Stamp: [2023, 3, 22, 17, 16, 6, 28422]
+	Nonce: 431605
 	Block Reward: 50
 	Transaction Fee: 0
-	Block creator: 52973051617416125761301529539176111323706979981900492619847188347258852503513+28441303134199334439880389425961531989799636954523787614848860124143756223841
+	Block creator: 12458640491580556581161156620673179822262802211173248515293893386261810938294+44651495295394293443497604356216836530500976218023619293565271330571520201522
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 Contents:
 ------------------------------------------------------------------------------
 Transaction 1: 
-Transaction: cc694d8a4af1d8fea1efc5101f32eb7f621fab99997bd04f663e194944b79bc0
+Transaction: 27bbb29d33dd7645b7f7d49196d757e3a879e598939cfbf658788ac9ad354a0c
 Value: 50
-Timestamp: 2023-03-22 13:36:01.866923
+Timestamp: 2023-03-22 17:16:06.028300
 Type: COINBASE
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Inputs: 
 1.	Input Hash: COINBASE_TRANSACTION
 	Script Signature: None
 Output:
-	Script Pub Key: P2PK:52973051617416125761301529539176111323706979981900492619847188347258852503513+28441303134199334439880389425961531989799636954523787614848860124143756223841
+	Script Pub Key: P2PK:12458640491580556581161156620673179822262802211173248515293893386261810938294+44651495295394293443497604356216836530500976218023619293565271330571520201522
 	Value: 50
-------------------------------------------------------------------------------
-Transaction 2: 
-Transaction: 3d7299d37311cad0327938e8480a31f64447683023af36971d3700b8c2f95561
-Value: 2
-Timestamp: 2023-03-22 13:35:51.454701
-Type: MAIN
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Inputs: 
-1.	Input Hash: ed0f744b764357368c42b9e05a9abf06a7a8fd29da8410ec2605c7f4eaf528f1
-	Script Signature: b'U\xe1:qR\n\xec\xb3Pd\xddL\xa4\x95\xf3]\xff\xdd\xcf\xe9\xb6\xcc~\x131\xb9\xf1\x874\xd4v7\x1ek\x1b\xcc^gk\x18\x02l\xa2z)\xc3\xe3\xd4\x9f\xba\xfd\xdb\x0f?d\x12n\xa0\xbd\x1d\x1d\x84\x1b\x01'
-Output:
-	Script Pub Key: P2PK:24325929289723203911727199385998887509568273927844390159925305626148260406368+15517681491904952726486121500153010367905526354608671276675180018318982436987
-	Value: 2
-------------------------------------------------------------------------------
-Transaction 3: 
-Transaction: ef7da823adb06218de4c2303720cfd7352cefef0a9879dd6d5d24db18beed793
-Value: 0
-Timestamp: 2023-03-22 13:35:51.655720
-Type: FEE
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Inputs: 
-1.	Input Hash: ed0f744b764357368c42b9e05a9abf06a7a8fd29da8410ec2605c7f4eaf528f1
-	Script Signature: TRANSACTION_FEE
-Output:
-	Script Pub Key: BLOCK_CREATOR
-	Value: 0

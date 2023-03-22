@@ -1,6 +1,6 @@
 from requirements import *
 
-
+import subprocess, os, platform
 from tkinter import *
 from tkinter import ttk
 from datetime import datetime
@@ -33,7 +33,7 @@ class Gui:
         self.other = Button(self.root, text='Other', state=DISABLED, command=self.other_op)
         self.menu_buttons.append(self.other)
 
-        self.manual = Button(self.root, text='Manual')
+        self.manual = Button(self.root, text='Manual', command=self.manual)
         self.menu_buttons.append(self.manual)
 
         self.exit = Button(self.root, text='Exit', width=5, command=self.exit)
@@ -285,8 +285,8 @@ class Gui:
         restart_button = Button(self.c_transaction_frame, text = 'Restart', command=self.c_transaction_op)
         restart_button.grid(row=3, column=1, sticky=W)
         
-        confirm_button = Button(self.c_transaction_frame, text = 'Confirm', command=lambda: self.d_transaction_op(self.choice['text']))
-        confirm_button.grid(row=3, column=2, sticky=W)
+        self.confirm_button = Button(self.c_transaction_frame, text = 'Confirm', command=lambda: self.d_transaction_op(self.choice['text']), state=DISABLED)
+        self.confirm_button.grid(row=3, column=2, sticky=W)
 
 
         self.t_btns = []
@@ -444,6 +444,7 @@ class Gui:
             self.transactions_to_send = []
 
     def select_transaction(self, i):
+        self.confirm_button['state'] = NORMAL
         if self.choice['text'] == 'P2PK' or self.choice['text'] == 'P2PKS':
             for btn in self.t_btns:
                 if btn['state'] == DISABLED:
@@ -559,6 +560,15 @@ class Gui:
 
 
         self.root.quit()
+    
+    def manual(self):
+        filepath = 'text/Greckle_Manual.pdf'
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', filepath))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(filepath)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', filepath))
 
 
 Gui()
