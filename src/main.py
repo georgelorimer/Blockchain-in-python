@@ -1,3 +1,6 @@
+from requirements import *
+
+
 from tkinter import *
 from tkinter import ttk
 from datetime import datetime
@@ -520,6 +523,12 @@ class Gui:
         try:
             if transaction_fee == 'x':
                 transaction_fee = 0
+            
+            if choice == 'P2PKS':
+                if self.node.check_addr(script_public_key) == False:
+                    self.transaction_message = 'Address is not valid'
+                    self.d_transaction_op(choice)
+                    return False
 
             if self.to_spend_value < int(value) + int(transaction_fee) or int(value) < 0 or int(transaction_fee)<0:
                 self.transaction_message = 'Incorrect values, Please Try again'

@@ -1,12 +1,14 @@
+
+
 import socket
 import threading
 import subprocess, os, platform
 from datetime import timedelta, datetime
+from hashlib import sha256
 
 from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
 import base58
-from hashlib import sha256
 
 from Transaction import *
 from Transaction_Pool import *
@@ -366,20 +368,21 @@ class Node:
 
             # Change Transaction
             remaining = to_spend_value - value - transaction_fee
-            t = Transaction(None,inputs,[Transaction_Output("P2PK:" + self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
-            if isinstance(transaction_to_spend, list):
-                count = 0
-                for transaction in transaction_to_spend:
-                    verified = t.verify(transaction, self.unspent, count)
-                    count += 1
-                    if verified == False:
-                        break
-            else:
-                verified = t.verify(transaction_to_spend, self.unspent, 0)
-            self.transaction_pool.add(t)
-            prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-            self.transaction_messages.append(prefixed_message)
-            self.send_message(prefixed_message)
+            if remaining > 0:
+                t = Transaction(None,inputs,[Transaction_Output("P2PK:" + self.pub_key_str, remaining)], datetime.now(), 'CHANGE')
+                if isinstance(transaction_to_spend, list):
+                    count = 0
+                    for transaction in transaction_to_spend:
+                        verified = t.verify(transaction, self.unspent, count)
+                        count += 1
+                        if verified == False:
+                            break
+                else:
+                    verified = t.verify(transaction_to_spend, self.unspent, 0)
+                self.transaction_pool.add(t)
+                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                self.transaction_messages.append(prefixed_message)
+                self.send_message(prefixed_message)
 
 
             # Fee Transaction
