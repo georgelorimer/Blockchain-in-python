@@ -562,7 +562,7 @@ class Gui:
         self.root.quit()
     
     def manual(self):
-        filepath = 'text/Greckle_Manual.pdf'
+        filepath = '../text/Greckle_Manual.pdf'
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', filepath))
         elif platform.system() == 'Windows':    # Windows

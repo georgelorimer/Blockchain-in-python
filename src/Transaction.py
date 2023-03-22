@@ -180,15 +180,15 @@ class Transaction:
 
     def to_txt(self):
         try:
-            os.remove('text/transaction_file.txt')
+            os.remove('../text/transaction_file.txt')
         except:
             pass
         text = self.txt_format()
-        file = open('text/transaction_file.txt', 'w')
+        file = open('../text/transaction_file.txt', 'w')
         file.write(text)
         file.close()
 
-        filepath = 'text/transaction_file.txt'
+        filepath = '../text/transaction_file.txt'
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', filepath))
         elif platform.system() == 'Windows':    # Windows

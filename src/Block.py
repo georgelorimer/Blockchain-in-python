@@ -114,11 +114,11 @@ class Block:
         
     def to_txt(self):
         text = self.txt_format()
-        file = open('text/block_file.txt', 'w')
+        file = open('../text/block_file.txt', 'w')
         file.write(text)
         file.close()
         
-        filepath = 'text/block_file.txt'
+        filepath = '../text/block_file.txt'
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', filepath))
         elif platform.system() == 'Windows':    # Windows

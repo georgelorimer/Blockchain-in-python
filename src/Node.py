@@ -83,134 +83,137 @@ class Node:
     def handler(self, c, a):
         message_q = []
         while True:
-            if len(message_q) == 0:
+            try:
+                if len(message_q) == 0:
 
-                # try, except:
-                data = c.recv(65536)
+                    # try, except:
+                    data = c.recv(65536)
 
-                str_data = data.decode("utf-8")
+                    str_data = data.decode("utf-8")
 
-                m_array = str_data.split('€')
+                    m_array = str_data.split('€')
 
-                str_data = m_array[0]
-                for i in range(1, len(m_array)-1):
-                    message_q.append(m_array[i])
+                    str_data = m_array[0]
+                    for i in range(1, len(m_array)-1):
+                        message_q.append(m_array[i])
 
 
-            else:
-                str_data = message_q[0]
-                message_q.pop(0)
-
-            if str_data.startswith("TRANSACTION"):
-
-                if str_data not in self.transaction_messages and self.eligible == True:
-                    str_array = str_data.split(':', 1)
-                    self.transaction_messages.append(str_data)
-
-                    transaction_dict = eval(str_array[1])
-                    transaction = Transaction.from_json_compatible(transaction_dict)
-
-                    if transaction.type == 'MAIN':
-                        self.last_transaction = transaction
-
-                    self.utxo()
-                    count = 0
-                    for input in transaction.inputs:
-                        input_transaction = None
-                        input_hash = input.transaction_hash
-                        for t in self.unspent:
-                            if t.hash == input_hash:
-                                input_transaction = t
-                                break
-                         
-                        
-                        # change this part
-                        verified = True
-                        if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
-                            pass
-                        else:
-                            if input_transaction == None:
-                                verified = False
-                            else:
-                                verified = transaction.verify(input_transaction, self.unspent, count) 
-                        count += 1
-
-                    
-                    if verified == True:
-                        print('Success')
-                        self.transaction_pool.add(transaction)
-                        self.utxo()
-                        if transaction in self.my_unspent and transaction.type == 'MAIN':
-                            self.event_messages = 'You recieved '+str(transaction.outputs[0].value)+' Greckles!'
-                        self.send_message(str_data)
-                    
-            elif str_data.startswith("BLOCK"):
-                if str_data not in self.transaction_messages:
-                    self.block_found = True
-                    str_array = str_data.split(':', 1)
-                    self.transaction_messages.append(str_data)
-                    block_dict = eval(str_array[1])
-                    block = Block.from_json_compatible(block_dict)
-
-                    added = self.blockchain.add(block)
-                    if added == True:
-                        self.transaction_pool.update_from_block(block)
-
-                        
-                        
-                        date = block.time
-                        dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
-                        self.time_for_next_round = dt + timedelta(0, 60)
-                        self.utxo()
-                        if self.eligible == False:
-                            self.block_found = False
-                            self.eligible = True
-
-                        self.event_messages = 'You recieved a new block'
-                        self.send_message(str_data)
-                    
-            
-            elif str_data.startswith("CHAIN"):
-                if str_data not in self.transaction_messages and self.blockchain == None:
-                    str_array = str_data.split(':', 1)
-                    self.transaction_messages.append(str_data)
-                    blockchain_dict = eval(str_array[1])
-                    self.blockchain = Blockchain.from_json_compatible(blockchain_dict)
-                    
-                    date = self.blockchain.head().time
-                    dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
-                    self.time_for_next_round =  dt + timedelta(0,60)
-                    self.utxo()
-            
-            elif str_data.startswith("PORT"):
-                str_array = str_data.split(':')
-                if int(str_array[1]) in self.peer_ports:
-                    pass
                 else:
-                    if int(str_array[1]) != int(str(self.port)):
-                        
-                        self.connect_to_peer(int(str_array[1]))
-                        self.event_messages = 'You connected to Port: '+str(str_array[1])
-                        
+                    str_data = message_q[0]
+                    message_q.pop(0)
+
+                if str_data.startswith("TRANSACTION"):
+
+                    if str_data not in self.transaction_messages and self.eligible == True:
+                        str_array = str_data.split(':', 1)
                         self.transaction_messages.append(str_data)
+
+                        transaction_dict = eval(str_array[1])
+                        transaction = Transaction.from_json_compatible(transaction_dict)
+
+                        if transaction.type == 'MAIN':
+                            self.last_transaction = transaction
+
+                        self.utxo()
+                        count = 0
+                        for input in transaction.inputs:
+                            input_transaction = None
+                            input_hash = input.transaction_hash
+                            for t in self.unspent:
+                                if t.hash == input_hash:
+                                    input_transaction = t
+                                    break
+                            
+                            
+                            # change this part
+                            verified = True
+                            if input_hash == "GENERATED_HASH" or input_hash == 'COINBASE_TRANSACTION' or transaction.outputs[0].script_pub_key == 'BLOCK_CREATOR':
+                                pass
+                            else:
+                                if input_transaction == None:
+                                    verified = False
+                                else:
+                                    verified = transaction.verify(input_transaction, self.unspent, count) 
+                            count += 1
+
+                        
+                        if verified == True:
+                            print('Success')
+                            self.transaction_pool.add(transaction)
+                            self.utxo()
+                            if transaction in self.my_unspent and transaction.type == 'MAIN':
+                                self.event_messages = 'You recieved '+str(transaction.outputs[0].value)+' Greckles!'
+                            self.send_message(str_data)
+                        
+                elif str_data.startswith("BLOCK"):
+                    if str_data not in self.transaction_messages:
+                        self.block_found = True
+                        str_array = str_data.split(':', 1)
+                        self.transaction_messages.append(str_data)
+                        block_dict = eval(str_array[1])
+                        block = Block.from_json_compatible(block_dict)
+
+                        added = self.blockchain.add(block)
+                        if added == True:
+                            self.transaction_pool.update_from_block(block)
+
+                            
+                            
+                            date = block.time
+                            dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+                            self.time_for_next_round = dt + timedelta(0, 60)
+                            self.utxo()
+                            if self.eligible == False:
+                                self.block_found = False
+                                self.eligible = True
+
+                            self.event_messages = 'You recieved a new block'
+                            self.send_message(str_data)
+                        
+                
+                elif str_data.startswith("CHAIN"):
+                    if str_data not in self.transaction_messages and self.blockchain == None:
+                        str_array = str_data.split(':', 1)
+                        self.transaction_messages.append(str_data)
+                        blockchain_dict = eval(str_array[1])
+                        self.blockchain = Blockchain.from_json_compatible(blockchain_dict)
+                        
+                        date = self.blockchain.head().time
+                        dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
+                        self.time_for_next_round =  dt + timedelta(0,60)
+                        self.utxo()
+                
+                elif str_data.startswith("PORT"):
+                    str_array = str_data.split(':')
+                    if int(str_array[1]) in self.peer_ports:
+                        pass
+                    else:
+                        if int(str_array[1]) != int(str(self.port)):
+                            
+                            self.connect_to_peer(int(str_array[1]))
+                            self.event_messages = 'You connected to Port: '+str(str_array[1])
+                            
+                            self.transaction_messages.append(str_data)
+                            self.send_message(str_data)
+
+                            try:
+                                if self.blockchain != None:
+
+                                    message = "CHAIN:" + str(self.blockchain.to_json_compatible())
+                                    self.transaction_messages.append(message)
+                                    self.send_message(message)
+                            except:
+                                pass
+                
+                elif str_data.startswith('EXIT'):
+                    if str_data not in self.transaction_messages:
+                        self.transaction_messages.append(str_data)
+                        tim.sleep(0.5)
                         self.send_message(str_data)
-
-                        try:
-                            if self.blockchain != None:
-
-                                message = "CHAIN:" + str(self.blockchain.to_json_compatible())
-                                self.transaction_messages.append(message)
-                                self.send_message(message)
-                        except:
-                            pass
-            
-            elif str_data.startswith('EXIT'):
-                if str_data not in self.transaction_messages:
-                    self.transaction_messages.append(str_data)
-                    tim.sleep(0.5)
-                    self.send_message(str_data)
-                    if self.eligible == False and len(self.peer_ports) == 0:
-                        self.gui.exit()
+                        if self.eligible == False and len(self.peer_ports) == 0:
+                            self.gui.exit()
+            except:
+                pass
 
 
 
@@ -601,9 +604,9 @@ class Node:
 
     def unspent_to_txt(self):
         try:
-            os.remove('text/unspent_transactions.txt')
+            os.remove('../text/unspent_transactions.txt')
             self.utxo()
-            file = open('text/unspent_transactions.txt', 'w')
+            file = open('../text/unspent_transactions.txt', 'w')
             file.write('Unspent Transactions:')
             for i in range(len(self.my_unspent)):
                 file.write('\n------------------------------------------------------------------------------\n')
@@ -611,7 +614,7 @@ class Node:
                 file.write(self.my_unspent[i].txt_format())
 
             file.close()
-            filepath = 'text/unspent_transactions.txt'
+            filepath = '../text/unspent_transactions.txt'
             if platform.system() == 'Darwin':       # macOS
                 subprocess.call(('open', filepath))
             elif platform.system() == 'Windows':    # Windows
