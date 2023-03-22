@@ -209,8 +209,8 @@ class Node:
                     self.transaction_messages.append(str_data)
                     tim.sleep(0.5)
                     self.send_message(str_data)
-                    if self.eligible == False:
-                        self.gui.root.quit()
+                    if self.eligible == False and len(self.peer_ports) == 0:
+                        self.gui.exit()
 
 
 

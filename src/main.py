@@ -526,7 +526,7 @@ class Gui:
                 transaction_fee = 0
             
             if choice == 'P2PKS':
-                if self.node.check_addr(script_public_key) == False:
+                if self.node.check_addr(spk[0]) == False:
                     self.transaction_message = 'Address is not valid'
                     self.d_transaction_op(choice)
                     return False
