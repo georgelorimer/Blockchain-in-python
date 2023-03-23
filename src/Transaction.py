@@ -264,10 +264,6 @@ class Transaction:
     def to_txt(self):
         """Creates a .txt file to show the transaction
         """
-        try:
-            os.remove('text/transaction_file.txt')
-        except:
-            pass
         text = self.txt_format()
         file = open('text/transaction_file.txt', 'w')
         file.write(text)

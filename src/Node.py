@@ -26,10 +26,12 @@ class Node:
     :vartype port: int
     :ivar sock: port socket
     :vartype sock: socket
+    :ivar con: connected to peer correctly
+    :vartype con: bool
     :ivar peers: list of peers
     :vartype peers: list of int
-    :ivar transaction_messages: list of messages in system
-    :vartype transaction_messages: list of str
+    :ivar network_messages: list of messages in system
+    :vartype network_messages: list of str
     :ivar peer_ports: list of peer ports
     :vartype peer_ports: list of int
     :ivar peer_dict: dictionary connecting peer:port
@@ -80,7 +82,7 @@ class Node:
         self.sock.bind(('127.0.0.1', port))
         self.sock.listen(5)
         self.peers = []
-        self.transaction_messages = []
+        self.network_messages = []
         self.peer_ports = []
         self.peer_dict = {}
         self.balance = 0
@@ -169,9 +171,9 @@ class Node:
 
                 if str_data.startswith("TRANSACTION"):
 
-                    if str_data not in self.transaction_messages and self.eligible == True:
+                    if str_data not in self.network_messages and self.eligible == True:
                         str_array = str_data.split(':', 1)
-                        self.transaction_messages.append(str_data)
+                        self.network_messages.append(str_data)
 
                         transaction_dict = eval(str_array[1])
                         transaction = Transaction.from_json_compatible(transaction_dict)
@@ -198,7 +200,7 @@ class Node:
                                 if input_transaction == None:
                                     verified = False
                                 else:
-                                    verified = transaction.verify(input_transaction, self.unspent, count) 
+                                    verified = transaction.verify(input_transaction, self.unspent.copy(), count) 
                             count += 1
 
                         
@@ -210,10 +212,10 @@ class Node:
                             self.send_message(str_data)
                         
                 elif str_data.startswith("BLOCK"):
-                    if str_data not in self.transaction_messages:
+                    if str_data not in self.network_messages:
                         self.block_found = True
                         str_array = str_data.split(':', 1)
-                        self.transaction_messages.append(str_data)
+                        self.network_messages.append(str_data)
                         block_dict = eval(str_array[1])
                         block = Block.from_json_compatible(block_dict)
 
@@ -221,8 +223,6 @@ class Node:
                         if added == True:
                             self.transaction_pool.update_from_block(block)
 
-                            
-                            
                             date = block.time
                             dt = datetime(date[0], date[1], date[2], date[3], date[4], date[5], date[6])
                             self.time_for_next_round = dt + timedelta(0, 60)
@@ -236,9 +236,9 @@ class Node:
                         
                 
                 elif str_data.startswith("CHAIN"):
-                    if str_data not in self.transaction_messages and self.blockchain == None:
+                    if str_data not in self.network_messages and self.blockchain == None:
                         str_array = str_data.split(':', 1)
-                        self.transaction_messages.append(str_data)
+                        self.network_messages.append(str_data)
                         blockchain_dict = eval(str_array[1])
                         self.blockchain = Blockchain.from_json_compatible(blockchain_dict)
                         
@@ -257,25 +257,25 @@ class Node:
                             self.connect_to_peer(int(str_array[1]))
                             self.event_messages = 'You connected to Port: '+str(str_array[1])
                             
-                            self.transaction_messages.append(str_data)
+                            self.network_messages.append(str_data)
                             self.send_message(str_data)
 
                             try:
                                 if self.blockchain != None:
 
                                     message = "CHAIN:" + str(self.blockchain.to_json_compatible())
-                                    self.transaction_messages.append(message)
+                                    self.network_messages.append(message)
                                     self.send_message(message)
                             except:
                                 pass
                 
                 elif str_data.startswith('EXIT'):
-                    if str_data not in self.transaction_messages:
-                        self.transaction_messages.append(str_data)
+                    if str_data not in self.network_messages:
+                        self.network_messages.append(str_data)
                         tim.sleep(0.5)
                         self.send_message(str_data)
                         if self.eligible == False and len(self.peer_ports) == 0:
-                            self.gui.exit()
+                            self.gui.exit(False)
             except:
                 pass
 
@@ -294,7 +294,7 @@ class Node:
                     
                     # send Block to others
                     prefixed_message="BLOCK:" + str(b.to_json_complete())
-                    self.transaction_messages.append(prefixed_message)
+                    self.network_messages.append(prefixed_message)
                     self.send_message(prefixed_message)
 
                     added = self.blockchain.add(b)
@@ -318,7 +318,7 @@ class Node:
         self.last_transaction = t
         self.transaction_pool.add(t)
         prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-        self.transaction_messages.append(prefixed_message)
+        self.network_messages.append(prefixed_message)
         self.send_message(prefixed_message)
         self.utxo()
         self.event_messages = 'You Generated 100 Greckles!'
@@ -351,18 +351,19 @@ class Node:
         if isinstance(transaction_to_spend, list):
             count = 0
             for transaction in transaction_to_spend:
-                verified = transaction_main.verify(transaction, self.unspent, count)
+                verified = transaction_main.verify(transaction, self.unspent.copy(), count)
                 count += 1
                 if verified == False:
                     break
         else:
-            verified = transaction_main.verify(transaction_to_spend, self.unspent, 0)
+            verified = transaction_main.verify(transaction_to_spend, self.unspent.copy(), 0)
 
         if verified == True:
             self.transaction_pool.add(transaction_main)
             prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
-            self.transaction_messages.append(prefixed_message)
+            self.network_messages.append(prefixed_message)
             self.send_message(prefixed_message)
+            self.last_transaction = transaction_main
             self.utxo()
             
 
@@ -373,26 +374,28 @@ class Node:
                 if isinstance(transaction_to_spend, list):
                     count = 0
                     for transaction in transaction_to_spend:
-                        verified = t.verify(transaction, self.unspent, count)
+                        verified = t.verify(transaction, self.unspent.copy(), count)
                         count += 1
                         if verified == False:
                             break
                 else:
-                    verified = t.verify(transaction_to_spend, self.unspent, 0)
+                    verified = t.verify(transaction_to_spend, self.unspent.copy(), 0)
                 self.transaction_pool.add(t)
                 prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-                self.transaction_messages.append(prefixed_message)
+                self.network_messages.append(prefixed_message)
                 self.send_message(prefixed_message)
 
-
             # Fee Transaction
-            t = Transaction(None,[Transaction_Input(transaction_hash, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
-            self.transaction_pool.add(t)
-            prefixed_message="TRANSACTION:" + str(t.to_json_complete())
-            self.transaction_messages.append(prefixed_message)
-            self.send_message(prefixed_message)
-            self.event_messages = 'You sent '+str(transaction_main.outputs[0].value)+' Greckles!'
-            return True
+            if transaction_fee == 0:
+                return True
+            else:
+                t = Transaction(None,[Transaction_Input(transaction_hash, 'TRANSACTION_FEE')],[Transaction_Output("BLOCK_CREATOR", transaction_fee)], datetime.now(), 'FEE')
+                self.transaction_pool.add(t)
+                prefixed_message="TRANSACTION:" + str(t.to_json_complete())
+                self.network_messages.append(prefixed_message)
+                self.send_message(prefixed_message)
+                self.event_messages = 'You sent '+str(transaction_main.outputs[0].value)+' Greckles!'
+                return True
         else:
             return False
 
@@ -481,7 +484,7 @@ class Node:
 
             count = 0
             for transaction in cp_my_unspent:
-                verified = transaction_main.verify(transaction, self.unspent, count)
+                verified = transaction_main.verify(transaction, self.unspent.copy(), count)
                 count += 1
                 if verified == False:
                     break
@@ -489,7 +492,7 @@ class Node:
             if verified == True:
                 self.transaction_pool.add(transaction_main)
                 prefixed_message="TRANSACTION:" + str(transaction_main.to_json_complete())
-                self.transaction_messages.append(prefixed_message)
+                self.network_messages.append(prefixed_message)
                 self.send_message(prefixed_message)
                 self.utxo()
         
@@ -507,7 +510,7 @@ class Node:
             pass
 
         # list of all transactions in blockchain and transaction pool - genesis block
-        all_transactions = self.blockchain.return_transactions() + self.transaction_pool.from_json_transactions()
+        all_transactions = self.blockchain.return_transactions() + self.transaction_pool.list_of_transactions()
         if len(all_transactions) == 0:
             self.my_unspent = None
         else:
@@ -628,7 +631,6 @@ class Node:
         """Creates a .txt file that outputs the unspent transactions
         """
         try:
-            os.remove('text/unspent_transactions.txt')
             self.utxo()
             file = open('text/unspent_transactions.txt', 'w')
             file.write('Unspent Transactions:')

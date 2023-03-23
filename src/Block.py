@@ -66,7 +66,7 @@ class Block:
             Block: Block object
         """
 
-        transactions = transaction_pool.from_json_transactions()
+        transactions = transaction_pool.list_of_transactions()
         fee = 0
         for transaction in transactions:
             if transaction.type == 'FEE':

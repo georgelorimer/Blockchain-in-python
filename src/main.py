@@ -1,9 +1,10 @@
 from requirements import *
-
+import time as tim
 import subprocess, os, platform
 from tkinter import *
 from tkinter import ttk
 from datetime import datetime
+import socket
 
 from Node import Node
 
@@ -40,15 +41,15 @@ class Gui:
         self.manual = Button(self.root, text='Manual', command=self.manual)
         self.menu_buttons.append(self.manual)
 
-        self.exit = Button(self.root, text='Exit', width=5, command=self.exit)
-        self.menu_buttons.append(self.exit)
+        self.exitb = Button(self.root, text='Exit', width=5, command=lambda: self.exit(False))
+        self.menu_buttons.append(self.exitb)
 
         self.home.grid(row=0, column=0)
         self.transactions.grid(row=0, column=1)
         self.block_explorer.grid(row=0, column=2)
         self.other.grid(row=0, column=3)
         self.manual.grid(row=0, column=4)
-        self.exit.grid(row=0, column=5)
+        self.exitb.grid(row=0, column=5)
 
         self.enter()
 
@@ -100,21 +101,18 @@ class Gui:
                 peer = None
             
             self.node = Node(int(port),peer, self)
-
             self.main_frame_open()
             self.home_op()
         except OSError:
-            self.connect_message = 'Port error, Try again.'
-            self.login_frame.destroy()
-            self.enter()
+            self.exit(True)
 
         except ConnectionRefusedError:
             self.connect_message = 'Connection refused'
-            self.login_frame.destroy()
+            self.delete_frame()
             self.enter()
         except:
             self.connect_message = 'Port error, Try again.'
-            self.login_frame.destroy()
+            self.delete_frame()
             self.enter()
 
 
@@ -435,10 +433,14 @@ class Gui:
     def delete_frame(self):
         """Deletes the open frame to allow another to open
         """
-        for button in self.menu_buttons:
-            button['state'] = NORMAL
-        if self.node.eligible == False:
-            self.transactions['state'] = DISABLED
+        try:
+            if self.node.eligible == False:
+                self.transactions['state'] = DISABLED
+            for button in self.menu_buttons:
+                button['state'] = NORMAL
+        except:
+            pass
+
         self.open_frame.destroy()
 
     def flip_opt(self, button, widg):
@@ -618,10 +620,15 @@ class Gui:
             self.transaction_message = 'Input Error, Please Try Again.'
             self.d_transaction_op(choice)
 
-    def exit(self):
+    def exit(self, choice):
         """Exit button, sends EXIT message to peers
         """
-        self.node.send_message('EXIT:'+str(datetime.now()))
+        try:
+            self.node.send_message('EXIT:'+str(datetime.now()))
+        except:
+            pass
+        if choice == True:
+            print('Port Error')
         self.root.quit()
     
     def manual(self):

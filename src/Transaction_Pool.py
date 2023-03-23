@@ -40,7 +40,7 @@ class Transaction_Pool:
             self.list_json.append(transaction.to_json_complete())
             return True
     
-    def from_json_transactions(self):
+    def list_of_transactions(self):
         """returns list of transactions
 
         Returns:
@@ -69,7 +69,7 @@ class Transaction_Pool:
             list: of transaction hashes
         """
         transactions_hash = []
-        for transaction in self.list:
+        for transaction in self.list.copy():
             transactions_hash.append(transaction.hash)
         return transactions_hash
     
@@ -85,7 +85,7 @@ class Transaction_Pool:
 
         new_transaction_pool = []
 
-        for pool_transaction in self.list:
+        for pool_transaction in self.list.copy():
             in_list = False
             for block_transaction in block_transactions:
                 if block_transaction == pool_transaction.to_json_complete():
