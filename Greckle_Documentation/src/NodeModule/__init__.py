@@ -1,4 +1,3 @@
-
 import socket
 import threading
 import sys
@@ -11,10 +10,7 @@ from Crypto.PublicKey import ECC
 from Crypto.Signature import eddsa
 import base58
 
-from Transaction import *
-from Transaction_Pool import *
-from Block import *
-from Blockchain import *
+
 
 class Node:
     """Node class stores the attributes required for the p2p network and blockchain

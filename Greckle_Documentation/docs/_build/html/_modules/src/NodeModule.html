@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.NodeModule &mdash; Greckle Documentation 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Greckle Documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Greckle Documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.NodeModule</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.NodeModule</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">subprocess</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">platform</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">tim</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha256</span>
+
+<span class="kn">from</span> <span class="nn">Crypto.PublicKey</span> <span class="kn">import</span> <span class="n">ECC</span>
+<span class="kn">from</span> <span class="nn">Crypto.Signature</span> <span class="kn">import</span> <span class="n">eddsa</span>
+<span class="kn">import</span> <span class="nn">base58</span>
+
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Node class stores the attributes required for the p2p network and blockchain</span>
+
+<span class="sd">    :ivar gui: Gui object for exit</span>
+<span class="sd">    :vartype gui: Gui</span>
+<span class="sd">    :ivar port: port that node is connected to</span>
+<span class="sd">    :vartype port: int</span>
+<span class="sd">    :ivar sock: port socket</span>
+<span class="sd">    :vartype sock: socket</span>
+<span class="sd">    :ivar peers: list of peers</span>
+<span class="sd">    :vartype peers: list of int</span>
+<span class="sd">    :ivar network_messages: list of messages in system</span>
+<span class="sd">    :vartype network_messages: list of str</span>
+<span class="sd">    :ivar peer_ports: list of peer ports</span>
+<span class="sd">    :vartype peer_ports: list of int</span>
+<span class="sd">    :ivar peer_dict: dictionary connecting peer:port</span>
+<span class="sd">    :vartype peer_dict: dict</span>
+<span class="sd">    :ivar balance: acount balance</span>
+<span class="sd">    :vartype balance: int</span>
+<span class="sd">    :ivar unspent: unspent transactions in the system</span>
+<span class="sd">    :vartype unspent: list of Transaction</span>
+<span class="sd">    :ivar my_unspent: my unspent transactions</span>
+<span class="sd">    :vartype my_unspent: list of transactions</span>
+<span class="sd">    :ivar last_transaction: last transaction sent in system</span>
+<span class="sd">    :vartype last_transaction: str</span>
+<span class="sd">    :ivar event_messages: message to be shown on gui.home</span>
+<span class="sd">    :vartype event_messages: str</span>
+<span class="sd">    :ivar transaction_pool: transaction pool of node</span>
+<span class="sd">    :vartype transaction_pool: Transaction</span>
+<span class="sd">    :ivar private_key: private key of user</span>
+<span class="sd">    :vartype private_key: Key</span>
+<span class="sd">    :ivar public_key: public key of the user</span>
+<span class="sd">    :vartype public_key: Key</span>
+<span class="sd">    :ivar pub_key_str: string representation of the public key</span>
+<span class="sd">    :vartype pub_key_str: str</span>
+<span class="sd">    :ivar blockchain: Blockchain object, personal copy of the blockchain</span>
+<span class="sd">    :vartype blockchain: Blockchain</span>
+<span class="sd">    :ivar eligible: bool if the block is eligible to send transactions</span>
+<span class="sd">    :vartype eligible: bool</span>
+<span class="sd">    :ivar mining: bool toggle mining on/off</span>
+<span class="sd">    :vartype mining: bool</span>
+<span class="sd">    :ivar block_found: bool whether a new block has been found or not</span>
+<span class="sd">    :vartype block_found: str</span>
+<span class="sd">    </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+    <span class="n">sock</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SO_REUSEADDR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="n">gui</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;innit</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            port (int): port to connect to</span>
+<span class="sd">            connection (int): port of peer to connect to</span>
+<span class="sd">            gui (Gui): Gui for the exit function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gui</span> <span class="o">=</span> <span class="n">gui</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">bind</span><span class="p">((</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peer_ports</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peer_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">balance</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_transaction</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_keys</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span> <span class="o">=</span> <span class="n">Transaction_Pool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pub_key_str</span><span class="p">)</span>
+
+        <span class="c1"># Connects to Genesis Peer</span>
+        <span class="k">if</span> <span class="n">connection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect_to_peer</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">connection</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eligible</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mining</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create Blockchain</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span> <span class="o">=</span> <span class="n">Blockchain</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="o">.</span><span class="n">head</span><span class="p">()</span><span class="o">.</span><span class="n">time</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">date</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_for_next_round</span> <span class="o">=</span>  <span class="n">dt</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">60</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eligible</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mining</span> <span class="o">=</span> <span class="kc">True</span>
+        
+
+        <span class="c1"># for mining</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_found</span> <span class="o">=</span> <span class="kc">False</span> 
+
+        <span class="n">min_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">miner</span><span class="p">)</span>
+        <span class="n">min_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">min_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># start loop for listening to connections</span>
+        <span class="n">listen_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">listen</span><span class="p">)</span>
+        <span class="n">listen_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">listen_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="c1">#### LOOPING FUNCTIONS ####</span>
+
+<div class="viewcode-block" id="Node.listen"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.listen">[docs]</a>    <span class="k">def</span> <span class="nf">listen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Listens for connections and creates new thread for each connection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+
+            <span class="n">c_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">handler</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+            <span class="n">c_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">c_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">peers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span></div>
+
+ 
+<div class="viewcode-block" id="Node.handler"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.handler">[docs]</a>    <span class="k">def</span> <span class="nf">handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handles all of the messages in the system</span>
+
+<span class="sd">        TRANSACTION - For recieving new transactions</span>
+<span class="sd">        BLOCK- For recieving new blocks</span>
+<span class="sd">        CHAIN - For recieving a chain</span>
+<span class="sd">        PORT - For connecting to the new port number</span>
+<span class="sd">        EXIT - For checking which socket has left the system</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            c (socket): new socket object</span>
+<span class="sd">            a (list): remote address</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">message_q</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_q</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+                    <span class="c1"># try, except:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">65536</span><span class="p">)</span>
+
+                    <span class="n">str_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+                    <span class="n">m_array</span> <span class="o">=</span> <span class="n">str_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;€&#39;</span><span class="p">)</span>
+
+                    <span class="n">str_data</span> <span class="o">=</span> <span class="n">m_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">m_array</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="n">message_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_array</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">str_data</span> <span class="o">=</span> <span class="n">message_q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">message_q</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">str_data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;TRANSACTION&quot;</span><span class="p">):</span>
+
+                    <span class="k">if</span> <span class="n">str_data</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">eligible</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="n">str_array</span> <span class="o">=</span> <span class="n">str_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+
+                        <span class="n">transaction_dict</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">str_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">transaction</span> <span class="o">=</span> <span class="n">Transaction</span><span class="o">.</span><span class="n">from_json_compatible</span><span class="p">(</span><span class="n">transaction_dict</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">transaction</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;MAIN&#39;</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">last_transaction</span> <span class="o">=</span> <span class="n">transaction</span>
+
+                        <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+                        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">transaction</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                            <span class="n">input_transaction</span> <span class="o">=</span> <span class="kc">None</span>
+                            <span class="n">input_hash</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">transaction_hash</span>
+                            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">hash</span> <span class="o">==</span> <span class="n">input_hash</span><span class="p">:</span>
+                                    <span class="n">input_transaction</span> <span class="o">=</span> <span class="n">t</span>
+                                    <span class="k">break</span>
+                            
+                            
+                            <span class="c1"># change this part</span>
+                            <span class="n">verified</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">if</span> <span class="n">input_hash</span> <span class="o">==</span> <span class="s2">&quot;GENERATED_HASH&quot;</span> <span class="ow">or</span> <span class="n">input_hash</span> <span class="o">==</span> <span class="s1">&#39;COINBASE_TRANSACTION&#39;</span> <span class="ow">or</span> <span class="n">transaction</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">script_pub_key</span> <span class="o">==</span> <span class="s1">&#39;BLOCK_CREATOR&#39;</span><span class="p">:</span>
+                                <span class="k">pass</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">input_transaction</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                                    <span class="n">verified</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">verified</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">input_transaction</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">count</span><span class="p">)</span> 
+                            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                        
+                        <span class="k">if</span> <span class="n">verified</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span> <span class="ow">and</span> <span class="n">transaction</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;MAIN&#39;</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="s1">&#39;You recieved &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; Greckles!&#39;</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+                        
+                <span class="k">elif</span> <span class="n">str_data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;BLOCK&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">str_data</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">block_found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">str_array</span> <span class="o">=</span> <span class="n">str_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+                        <span class="n">block_dict</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">str_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">block</span> <span class="o">=</span> <span class="n">Block</span><span class="o">.</span><span class="n">from_json_compatible</span><span class="p">(</span><span class="n">block_dict</span><span class="p">)</span>
+
+                        <span class="n">added</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">added</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">update_from_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+                            <span class="n">date</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">time</span>
+                            <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">date</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">time_for_next_round</span> <span class="o">=</span> <span class="n">dt</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eligible</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">block_found</span> <span class="o">=</span> <span class="kc">False</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">eligible</span> <span class="o">=</span> <span class="kc">True</span>
+
+                            <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="s1">&#39;You recieved a new block&#39;</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+                        
+                
+                <span class="k">elif</span> <span class="n">str_data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;CHAIN&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">str_data</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">str_array</span> <span class="o">=</span> <span class="n">str_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+                        <span class="n">blockchain_dict</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">str_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span> <span class="o">=</span> <span class="n">Blockchain</span><span class="o">.</span><span class="n">from_json_compatible</span><span class="p">(</span><span class="n">blockchain_dict</span><span class="p">)</span>
+                        
+                        <span class="n">date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="o">.</span><span class="n">head</span><span class="p">()</span><span class="o">.</span><span class="n">time</span>
+                        <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">date</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">time_for_next_round</span> <span class="o">=</span>  <span class="n">dt</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">60</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+                
+                <span class="k">elif</span> <span class="n">str_data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;PORT&quot;</span><span class="p">):</span>
+                    <span class="n">str_array</span> <span class="o">=</span> <span class="n">str_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">str_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">peer_ports</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">str_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)):</span>
+                            
+                            <span class="bp">self</span><span class="o">.</span><span class="n">connect_to_peer</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">str_array</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="s1">&#39;You connected to Port: &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">str_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                            
+                            <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+
+                                    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;CHAIN:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="o">.</span><span class="n">to_json_compatible</span><span class="p">())</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                            <span class="k">except</span><span class="p">:</span>
+                                <span class="k">pass</span>
+                
+                <span class="k">elif</span> <span class="n">str_data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;EXIT&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">str_data</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+                        <span class="n">tim</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eligible</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">peer_ports</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">gui</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="Node.miner"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.miner">[docs]</a>    <span class="k">def</span> <span class="nf">miner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mining tries to create a new block when the new round begins.</span>
+<span class="sd">        It attempts to beet the other nodes in creating a valid block.</span>
+<span class="sd">        If it wins it will add the block to their personal chain and then send it across the p2p network</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mining</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_for_next_round</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">eligible</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">Block</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="o">.</span><span class="n">prev_block_hash</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_key_str</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_found</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                    
+                    <span class="c1"># send Block to others</span>
+                    <span class="n">prefixed_message</span><span class="o">=</span><span class="s2">&quot;BLOCK:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+
+                    <span class="n">added</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">added</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">update_from_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+                        <span class="n">date</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">time</span>
+                        <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">date</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">date</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">time_for_next_round</span> <span class="o">=</span>  <span class="n">dt</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">60</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="s1">&#39;You mined a new block and recieved &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">block_transactions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; Greckles!&#39;</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_found</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">block_found</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="c1">#### MENU FUNCTIONS ####</span>
+<div class="viewcode-block" id="Node.gen_coins"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.gen_coins">[docs]</a>    <span class="k">def</span> <span class="nf">gen_coins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates 100 coins for the user</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">(</span><span class="kc">None</span><span class="p">,[</span><span class="n">Transaction_Input</span><span class="p">(</span><span class="s2">&quot;GENERATED_HASH&quot;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">)],</span> <span class="p">[</span><span class="n">Transaction_Output</span><span class="p">(</span><span class="s2">&quot;P2PK:&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_key_str</span><span class="p">,</span> <span class="mi">100</span><span class="p">)],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="s1">&#39;GEN&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_transaction</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">prefixed_message</span><span class="o">=</span><span class="s2">&quot;TRANSACTION:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="s1">&#39;You Generated 100 Greckles!&#39;</span></div>
+    
+<div class="viewcode-block" id="Node.transaction_maker"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.transaction_maker">[docs]</a>    <span class="k">def</span> <span class="nf">transaction_maker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transaction_to_spend</span><span class="p">,</span> <span class="n">script_pub_key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">transaction_fee</span><span class="p">,</span> <span class="n">to_spend_value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a transaction, the change transaction and the fee transaction</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            transaction_to_spend (list of Transaction or Transaction): the selected transaction(s) to send</span>
+<span class="sd">            script_pub_key (str): script_pub_key of the transactions</span>
+<span class="sd">            value (int): value of the new main transaction</span>
+<span class="sd">            transaction_fee (int): the value of the transaction fee</span>
+<span class="sd">            to_spend_value (int): sum of the values of the transactions in transaction_to_spend</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: transaction creation succesful</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">transaction_to_spend</span><span class="p">:</span>
+            <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">hash</span>
+
+            <span class="n">signer</span> <span class="o">=</span> <span class="n">eddsa</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">private_key</span><span class="p">,</span> <span class="s1">&#39;rfc8032&#39;</span><span class="p">)</span>
+            <span class="n">script_sig</span> <span class="o">=</span> <span class="n">signer</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Transaction_Input</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">script_sig</span><span class="p">))</span>
+        
+        <span class="c1"># Main Transaction</span>
+        <span class="n">transaction_main</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">inputs</span><span class="p">,[</span><span class="n">Transaction_Output</span><span class="p">(</span><span class="n">script_pub_key</span><span class="p">,</span> <span class="n">value</span><span class="p">)],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="s1">&#39;MAIN&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_transaction</span> <span class="o">=</span> <span class="n">transaction_main</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transaction_to_spend</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">transaction_to_spend</span><span class="p">:</span>
+                <span class="n">verified</span> <span class="o">=</span> <span class="n">transaction_main</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">count</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">verified</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">verified</span> <span class="o">=</span> <span class="n">transaction_main</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_to_spend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verified</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">transaction_main</span><span class="p">)</span>
+            <span class="n">prefixed_message</span><span class="o">=</span><span class="s2">&quot;TRANSACTION:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">transaction_main</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_transaction</span> <span class="o">=</span> <span class="n">transaction_main</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+            
+
+            <span class="c1"># Change Transaction</span>
+            <span class="n">remaining</span> <span class="o">=</span> <span class="n">to_spend_value</span> <span class="o">-</span> <span class="n">value</span> <span class="o">-</span> <span class="n">transaction_fee</span>
+            <span class="k">if</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">inputs</span><span class="p">,[</span><span class="n">Transaction_Output</span><span class="p">(</span><span class="s2">&quot;P2PK:&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_key_str</span><span class="p">,</span> <span class="n">remaining</span><span class="p">)],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="s1">&#39;CHANGE&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transaction_to_spend</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">transaction_to_spend</span><span class="p">:</span>
+                        <span class="n">verified</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">count</span><span class="p">)</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">verified</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                            <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">verified</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction_to_spend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">prefixed_message</span><span class="o">=</span><span class="s2">&quot;TRANSACTION:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+
+            <span class="c1"># Fee Transaction</span>
+            <span class="k">if</span> <span class="n">transaction_fee</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">(</span><span class="kc">None</span><span class="p">,[</span><span class="n">Transaction_Input</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="s1">&#39;TRANSACTION_FEE&#39;</span><span class="p">)],[</span><span class="n">Transaction_Output</span><span class="p">(</span><span class="s2">&quot;BLOCK_CREATOR&quot;</span><span class="p">,</span> <span class="n">transaction_fee</span><span class="p">)],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="s1">&#39;FEE&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">prefixed_message</span><span class="o">=</span><span class="s2">&quot;TRANSACTION:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="s1">&#39;You sent &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">transaction_main</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39; Greckles!&#39;</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="c1">#### UTILITY FUNCTIONS ####</span>
+
+<div class="viewcode-block" id="Node.connect_to_peer"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.connect_to_peer">[docs]</a>    <span class="k">def</span> <span class="nf">connect_to_peer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peer_port</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect to a peer via a port number</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            peer_port (int): port to connect to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">peer_sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+        <span class="n">peer_sock</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">peer_port</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peer_sock</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peer_ports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peer_port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peer_dict</span><span class="p">[</span><span class="n">peer_sock</span><span class="p">]</span> <span class="o">=</span> <span class="n">peer_port</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;PORT:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;€&#39;</span>
+        <span class="n">peer_sock</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Node.send_message"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.send_message">[docs]</a>    <span class="k">def</span> <span class="nf">send_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sends a message to all peers and removes broken connections</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            message (str): message to send</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">message</span> <span class="o">+</span> <span class="s2">&quot;€&quot;</span>
+        <span class="n">broken_connections</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">peer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">peers</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">peer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">broken_connections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peer</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">peer</span> <span class="ow">in</span> <span class="n">broken_connections</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">peers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">peer</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">peer_dict</span><span class="p">[</span><span class="n">peer</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">peer_ports</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">peer_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">peer</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">broken_connections</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">peer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">peers</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">peer</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">BrokenPipeError</span><span class="p">:</span>
+                    <span class="n">broken_connections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">peer</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">peer</span> <span class="ow">in</span> <span class="n">broken_connections</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">peer_dict</span><span class="p">[</span><span class="n">peer</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">peer_ports</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">peer_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">peer</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Node.generate_keys"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.generate_keys">[docs]</a>    <span class="k">def</span> <span class="nf">generate_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates the keys for the node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">private_key</span> <span class="o">=</span> <span class="n">ECC</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">curve</span><span class="o">=</span><span class="s1">&#39;ed25519&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">public_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">private_key</span><span class="o">.</span><span class="n">public_key</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub_key_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">public_key</span><span class="o">.</span><span class="n">pointQ</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">public_key</span><span class="o">.</span><span class="n">pointQ</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Node.regenerate_keys"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.regenerate_keys">[docs]</a>    <span class="k">def</span> <span class="nf">regenerate_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Regenerates new keys and sends the nodes unspent transactions to the new key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+        <span class="n">new_private_key</span> <span class="o">=</span> <span class="n">ECC</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">curve</span><span class="o">=</span><span class="s1">&#39;ed25519&#39;</span><span class="p">)</span>
+        <span class="n">new_public_key</span> <span class="o">=</span> <span class="n">new_private_key</span><span class="o">.</span><span class="n">public_key</span><span class="p">()</span>
+        <span class="n">new_pub_key_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_public_key</span><span class="o">.</span><span class="n">pointQ</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_public_key</span><span class="o">.</span><span class="n">pointQ</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cp_my_unspent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">cp_my_unspent</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">+=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">transaction_hash</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">hash</span>
+
+                <span class="n">signer</span> <span class="o">=</span> <span class="n">eddsa</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">private_key</span><span class="p">,</span> <span class="s1">&#39;rfc8032&#39;</span><span class="p">)</span>
+                <span class="n">script_sig</span> <span class="o">=</span> <span class="n">signer</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+                <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Transaction_Input</span><span class="p">(</span><span class="n">transaction_hash</span><span class="p">,</span> <span class="n">script_sig</span><span class="p">))</span>
+            
+            <span class="n">transaction_main</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">inputs</span><span class="p">,[</span><span class="n">Transaction_Output</span><span class="p">(</span><span class="s1">&#39;MULTIP2PK:&#39;</span><span class="o">+</span><span class="n">new_pub_key_str</span><span class="p">,</span> <span class="n">value</span><span class="p">)],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="s1">&#39;MAIN&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_transaction</span> <span class="o">=</span> <span class="n">transaction_main</span>
+
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">cp_my_unspent</span><span class="p">:</span>
+                <span class="n">verified</span> <span class="o">=</span> <span class="n">transaction_main</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">transaction</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">count</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">verified</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="k">break</span>
+            
+            <span class="k">if</span> <span class="n">verified</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">transaction_main</span><span class="p">)</span>
+                <span class="n">prefixed_message</span><span class="o">=</span><span class="s2">&quot;TRANSACTION:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">transaction_main</span><span class="o">.</span><span class="n">to_json_complete</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">network_messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">prefixed_message</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">private_key</span> <span class="o">=</span> <span class="n">new_private_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">public_key</span> <span class="o">=</span> <span class="n">new_public_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub_key_str</span> <span class="o">=</span> <span class="n">new_pub_key_str</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_messages</span> <span class="o">=</span> <span class="s2">&quot;You created a new private key&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Node.utxo"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.utxo">[docs]</a>    <span class="k">def</span> <span class="nf">utxo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the balance, unspent and my unspent by checking the transactions in the blockchain and transaction pool.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># list of all transactions in blockchain and transaction pool - genesis block</span>
+        <span class="n">all_transactions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockchain</span><span class="o">.</span><span class="n">return_transactions</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_pool</span><span class="o">.</span><span class="n">list_of_transactions</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_transactions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unspent</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">all_transactions</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">transaction</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;GEN&quot;</span> <span class="ow">or</span> <span class="n">transaction</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;COINBASE&#39;</span> <span class="ow">or</span> <span class="n">transaction</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;CHANGE&#39;</span><span class="p">:</span>
+                    <span class="n">unspent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">transaction</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;MAIN&quot;</span><span class="p">:</span>
+                        <span class="c1"># remove spent transaction</span>
+                        <span class="n">spent_array</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="k">for</span> <span class="n">spent</span> <span class="ow">in</span> <span class="n">unspent</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">transaction</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">spent</span><span class="o">.</span><span class="n">hash</span> <span class="o">==</span> <span class="nb">input</span><span class="o">.</span><span class="n">transaction_hash</span><span class="p">:</span>
+                                    <span class="n">spent_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spent</span><span class="p">)</span>
+                        
+                        <span class="k">for</span> <span class="n">spent</span> <span class="ow">in</span> <span class="n">spent_array</span><span class="p">:</span>
+                            <span class="n">unspent</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">spent</span><span class="p">)</span>
+
+                        <span class="c1"># add main transaction</span>
+                        <span class="n">unspent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+            
+            <span class="n">my_unspent</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">balance</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+            <span class="k">for</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="n">unspent</span><span class="p">:</span>
+                <span class="n">output_key</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">transaction_key</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">script_pub_key</span>
+
+                <span class="n">out_key_array</span> <span class="o">=</span> <span class="n">transaction_key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">out_key_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;P2PK&quot;</span> <span class="ow">or</span> <span class="n">out_key_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;MULTIP2PK&quot;</span><span class="p">:</span>
+                    <span class="n">output_key</span> <span class="o">=</span> <span class="n">out_key_array</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="n">out_key_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;P2PKS&quot;</span><span class="p">:</span>
+                    <span class="n">output_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">addr_to_pub</span><span class="p">(</span><span class="n">out_key_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">output_key</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">pub_key_str</span><span class="p">:</span>
+                    <span class="n">my_unspent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+                    <span class="n">balance</span> <span class="o">+=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">unspent</span> <span class="o">=</span> <span class="n">unspent</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span> <span class="o">=</span> <span class="n">my_unspent</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span></div>
+
+    <span class="c1">#### KEY SECURE FUNCTIONS </span>
+<div class="viewcode-block" id="Node.pub_to_addr"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.pub_to_addr">[docs]</a>    <span class="k">def</span> <span class="nf">pub_to_addr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turns the public key into a secure public key/address</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key (str): pub_key_str</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: public key secure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pub_array</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="n">intx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pub_array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">inty</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pub_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">x58</span> <span class="o">=</span> <span class="n">base58</span><span class="o">.</span><span class="n">b58encode_int</span><span class="p">(</span><span class="n">intx</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">y58</span> <span class="o">=</span> <span class="n">base58</span><span class="o">.</span><span class="n">b58encode_int</span><span class="p">(</span><span class="n">inty</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+        <span class="n">string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">x58</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">y58</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span>
+
+        <span class="nb">hash</span> <span class="o">=</span> <span class="n">sha256</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+        <span class="n">checksum</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span>
+
+        <span class="n">address</span> <span class="o">=</span> <span class="n">string</span> <span class="o">+</span> <span class="n">checksum</span>
+
+        <span class="k">return</span> <span class="n">address</span></div>
+    
+<div class="viewcode-block" id="Node.check_addr"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.check_addr">[docs]</a>    <span class="k">def</span> <span class="nf">check_addr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">addr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks the address checksum is correct for the rest of the address</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            addr (str): address</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: the address is valid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">addr_split</span><span class="o">=</span> <span class="n">addr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+
+        <span class="n">check_string</span> <span class="o">=</span> <span class="n">addr_split</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="n">addr_split</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span>
+
+        <span class="n">check_cs</span> <span class="o">=</span> <span class="n">sha256</span><span class="p">(</span><span class="n">check_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">8</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">check_cs</span> <span class="o">==</span> <span class="n">addr_split</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+    
+<div class="viewcode-block" id="Node.addr_to_pub"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.addr_to_pub">[docs]</a>    <span class="k">def</span> <span class="nf">addr_to_pub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">addr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turns the address back into the public key</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            addr (str): public key secure</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: pub_key_str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">addr_array</span> <span class="o">=</span> <span class="n">addr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="n">bytex</span> <span class="o">=</span> <span class="n">base58</span><span class="o">.</span><span class="n">b58decode</span><span class="p">(</span><span class="n">addr_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+        <span class="n">bytey</span> <span class="o">=</span> <span class="n">base58</span><span class="o">.</span><span class="n">b58decode</span><span class="p">(</span><span class="n">addr_array</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+
+        <span class="n">x</span><span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">bytex</span><span class="p">,</span> <span class="s1">&#39;big&#39;</span><span class="p">)</span>
+        <span class="n">y</span><span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">bytey</span><span class="p">,</span> <span class="s1">&#39;big&#39;</span><span class="p">)</span>
+
+        <span class="n">pub_key_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;+&quot;</span> <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pub_key_str</span></div>
+
+
+<div class="viewcode-block" id="Node.unspent_to_txt"><a class="viewcode-back" href="../../src.NodeModule.html#src.NodeModule.Node.unspent_to_txt">[docs]</a>    <span class="k">def</span> <span class="nf">unspent_to_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a .txt file that outputs the unspent transactions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">utxo</span><span class="p">()</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;text/unspent_transactions.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Unspent Transactions:&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span><span class="p">)):</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">------------------------------------------------------------------------------</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Transaction &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span> <span class="s1">&#39;: </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">my_unspent</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">txt_format</span><span class="p">())</span>
+
+            <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="s1">&#39;text/unspent_transactions.txt&#39;</span>
+            <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Darwin&#39;</span><span class="p">:</span>       <span class="c1"># macOS</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">((</span><span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>    <span class="c1"># Windows</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">startfile</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>                                   <span class="c1"># linux variants</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">((</span><span class="s1">&#39;xdg-open&#39;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, George Lorimer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
