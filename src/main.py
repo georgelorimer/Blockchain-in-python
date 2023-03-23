@@ -434,10 +434,10 @@ class Gui:
         """Deletes the open frame to allow another to open
         """
         try:
-            if self.node.eligible == False:
-                self.transactions['state'] = DISABLED
             for button in self.menu_buttons:
                 button['state'] = NORMAL
+            if self.node.eligible == False:
+                self.transactions['state'] = DISABLED
         except:
             pass
 
