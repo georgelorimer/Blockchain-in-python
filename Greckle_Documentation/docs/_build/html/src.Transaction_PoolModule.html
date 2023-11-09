@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.Transaction_PoolModule package &mdash; Greckle Documentation 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Greckle Documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.Transaction_PoolModule package</a><ul>
+<li><a class="reference internal" href="#module-src.Transaction_PoolModule">Module contents</a><ul>
+<li><a class="reference internal" href="#src.Transaction_PoolModule.Transaction_Pool"><code class="docutils literal notranslate"><span class="pre">Transaction_Pool</span></code></a><ul>
+<li><a class="reference internal" href="#src.Transaction_PoolModule.Transaction_Pool.add"><code class="docutils literal notranslate"><span class="pre">Transaction_Pool.add()</span></code></a></li>
+<li><a class="reference internal" href="#src.Transaction_PoolModule.Transaction_Pool.list_of_transactions"><code class="docutils literal notranslate"><span class="pre">Transaction_Pool.list_of_transactions()</span></code></a></li>
+<li><a class="reference internal" href="#src.Transaction_PoolModule.Transaction_Pool.to_json_complete"><code class="docutils literal notranslate"><span class="pre">Transaction_Pool.to_json_complete()</span></code></a></li>
+<li><a class="reference internal" href="#src.Transaction_PoolModule.Transaction_Pool.to_list_hash"><code class="docutils literal notranslate"><span class="pre">Transaction_Pool.to_list_hash()</span></code></a></li>
+<li><a class="reference internal" href="#src.Transaction_PoolModule.Transaction_Pool.update_from_block"><code class="docutils literal notranslate"><span class="pre">Transaction_Pool.update_from_block()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Greckle Documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">src.Transaction_PoolModule package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.Transaction_PoolModule.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="src-transaction-poolmodule-package">
+<h1>src.Transaction_PoolModule package<a class="headerlink" href="#src-transaction-poolmodule-package" title="Permalink to this heading"></a></h1>
+<section id="module-src.Transaction_PoolModule">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.Transaction_PoolModule" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.Transaction_PoolModule.Transaction_Pool">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.Transaction_PoolModule.</span></span><span class="sig-name descname"><span class="pre">Transaction_Pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pub_key_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/Transaction_PoolModule.html#Transaction_Pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.Transaction_PoolModule.Transaction_Pool" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Transaction_Pool holds all the transactions in the current round to be made into a new block</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list</strong> (<em>list</em><em> of </em><a class="reference internal" href="src.TransactionModule.html#src.TransactionModule.Transaction" title="src.TransactionModule.Transaction"><em>Transaction</em></a>) – list of all the transactions in the pool</p></li>
+<li><p><strong>pub_key_str</strong> (<em>str</em>) – sting of public key</p></li>
+<li><p><strong>list_json</strong> (<em>list</em><em> of </em><em>json</em>) – list of json representations of transactions</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.Transaction_PoolModule.Transaction_Pool.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transaction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/Transaction_PoolModule.html#Transaction_Pool.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.Transaction_PoolModule.Transaction_Pool.add" title="Permalink to this definition"></a></dt>
+<dd><p>Adds transaction if transaction is not already present</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>transaction</strong> (<a class="reference internal" href="src.TransactionModule.html#src.TransactionModule.Transaction" title="src.TransactionModule.Transaction"><em>Transaction</em></a>) – transaction to add</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>was transaction added</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.Transaction_PoolModule.Transaction_Pool.list_of_transactions">
+<span class="sig-name descname"><span class="pre">list_of_transactions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/Transaction_PoolModule.html#Transaction_Pool.list_of_transactions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.Transaction_PoolModule.Transaction_Pool.list_of_transactions" title="Permalink to this definition"></a></dt>
+<dd><p>returns list of transactions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of transactions</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.Transaction_PoolModule.Transaction_Pool.to_json_complete">
+<span class="sig-name descname"><span class="pre">to_json_complete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/Transaction_PoolModule.html#Transaction_Pool.to_json_complete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.Transaction_PoolModule.Transaction_Pool.to_json_complete" title="Permalink to this definition"></a></dt>
+<dd><p>to json representation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>of json transactions</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.Transaction_PoolModule.Transaction_Pool.to_list_hash">
+<span class="sig-name descname"><span class="pre">to_list_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/Transaction_PoolModule.html#Transaction_Pool.to_list_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.Transaction_PoolModule.Transaction_Pool.to_list_hash" title="Permalink to this definition"></a></dt>
+<dd><p>list of transaction hashes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>of transaction hashes</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.Transaction_PoolModule.Transaction_Pool.update_from_block">
+<span class="sig-name descname"><span class="pre">update_from_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">block</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/Transaction_PoolModule.html#Transaction_Pool.update_from_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.Transaction_PoolModule.Transaction_Pool.update_from_block" title="Permalink to this definition"></a></dt>
+<dd><p>When a new block is created, the transaction pool will be updated.
+All transactions that have not been added to the blockchain will remain.
+Any double spends will be found here</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>block</strong> (<a class="reference internal" href="src.BlockModule.html#src.BlockModule.Block" title="src.BlockModule.Block"><em>Block</em></a>) – block to update from</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, George Lorimer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

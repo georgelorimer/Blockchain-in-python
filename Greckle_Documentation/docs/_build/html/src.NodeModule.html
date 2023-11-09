@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.NodeModule package &mdash; Greckle Documentation 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Greckle Documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.NodeModule package</a><ul>
+<li><a class="reference internal" href="#module-src.NodeModule">Module contents</a><ul>
+<li><a class="reference internal" href="#src.NodeModule.Node"><code class="docutils literal notranslate"><span class="pre">Node</span></code></a><ul>
+<li><a class="reference internal" href="#src.NodeModule.Node.addr_to_pub"><code class="docutils literal notranslate"><span class="pre">Node.addr_to_pub()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.check_addr"><code class="docutils literal notranslate"><span class="pre">Node.check_addr()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.connect_to_peer"><code class="docutils literal notranslate"><span class="pre">Node.connect_to_peer()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.gen_coins"><code class="docutils literal notranslate"><span class="pre">Node.gen_coins()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.generate_keys"><code class="docutils literal notranslate"><span class="pre">Node.generate_keys()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.handler"><code class="docutils literal notranslate"><span class="pre">Node.handler()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.listen"><code class="docutils literal notranslate"><span class="pre">Node.listen()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.miner"><code class="docutils literal notranslate"><span class="pre">Node.miner()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.pub_to_addr"><code class="docutils literal notranslate"><span class="pre">Node.pub_to_addr()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.regenerate_keys"><code class="docutils literal notranslate"><span class="pre">Node.regenerate_keys()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.send_message"><code class="docutils literal notranslate"><span class="pre">Node.send_message()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.sock"><code class="docutils literal notranslate"><span class="pre">Node.sock</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.transaction_maker"><code class="docutils literal notranslate"><span class="pre">Node.transaction_maker()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.unspent_to_txt"><code class="docutils literal notranslate"><span class="pre">Node.unspent_to_txt()</span></code></a></li>
+<li><a class="reference internal" href="#src.NodeModule.Node.utxo"><code class="docutils literal notranslate"><span class="pre">Node.utxo()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Greckle Documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">src.NodeModule package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.NodeModule.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="src-nodemodule-package">
+<h1>src.NodeModule package<a class="headerlink" href="#src-nodemodule-package" title="Permalink to this heading"></a></h1>
+<section id="module-src.NodeModule">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.NodeModule" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.NodeModule.Node">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.NodeModule.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Node class stores the attributes required for the p2p network and blockchain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gui</strong> (<a class="reference internal" href="src.GuiModule.html#src.GuiModule.Gui" title="src.GuiModule.Gui"><em>Gui</em></a>) – Gui object for exit</p></li>
+<li><p><strong>port</strong> (<em>int</em>) – port that node is connected to</p></li>
+<li><p><strong>sock</strong> (<em>socket</em>) – port socket</p></li>
+<li><p><strong>peers</strong> (<em>list</em><em> of </em><em>int</em>) – list of peers</p></li>
+<li><p><strong>network_messages</strong> (<em>list</em><em> of </em><em>str</em>) – list of messages in system</p></li>
+<li><p><strong>peer_ports</strong> (<em>list</em><em> of </em><em>int</em>) – list of peer ports</p></li>
+<li><p><strong>peer_dict</strong> (<em>dict</em>) – dictionary connecting peer:port</p></li>
+<li><p><strong>balance</strong> (<em>int</em>) – acount balance</p></li>
+<li><p><strong>unspent</strong> (<em>list</em><em> of </em><a class="reference internal" href="src.TransactionModule.html#src.TransactionModule.Transaction" title="src.TransactionModule.Transaction"><em>Transaction</em></a>) – unspent transactions in the system</p></li>
+<li><p><strong>my_unspent</strong> (<em>list</em><em> of </em><em>transactions</em>) – my unspent transactions</p></li>
+<li><p><strong>last_transaction</strong> (<em>str</em>) – last transaction sent in system</p></li>
+<li><p><strong>event_messages</strong> (<em>str</em>) – message to be shown on gui.home</p></li>
+<li><p><strong>transaction_pool</strong> (<a class="reference internal" href="src.TransactionModule.html#src.TransactionModule.Transaction" title="src.TransactionModule.Transaction"><em>Transaction</em></a>) – transaction pool of node</p></li>
+<li><p><strong>private_key</strong> (<em>Key</em>) – private key of user</p></li>
+<li><p><strong>public_key</strong> (<em>Key</em>) – public key of the user</p></li>
+<li><p><strong>pub_key_str</strong> (<em>str</em>) – string representation of the public key</p></li>
+<li><p><strong>blockchain</strong> (<a class="reference internal" href="src.BlockhainModule.html#src.BlockhainModule.Blockchain" title="src.BlockhainModule.Blockchain"><em>Blockchain</em></a>) – Blockchain object, personal copy of the blockchain</p></li>
+<li><p><strong>eligible</strong> (<em>bool</em>) – bool if the block is eligible to send transactions</p></li>
+<li><p><strong>mining</strong> (<em>bool</em>) – bool toggle mining on/off</p></li>
+<li><p><strong>block_found</strong> (<em>str</em>) – bool whether a new block has been found or not</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.addr_to_pub">
+<span class="sig-name descname"><span class="pre">addr_to_pub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">addr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.addr_to_pub"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.addr_to_pub" title="Permalink to this definition"></a></dt>
+<dd><p>Turns the address back into the public key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>addr</strong> (<em>str</em>) – public key secure</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>pub_key_str</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.check_addr">
+<span class="sig-name descname"><span class="pre">check_addr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">addr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.check_addr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.check_addr" title="Permalink to this definition"></a></dt>
+<dd><p>Checks the address checksum is correct for the rest of the address</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>addr</strong> (<em>str</em>) – address</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the address is valid</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.connect_to_peer">
+<span class="sig-name descname"><span class="pre">connect_to_peer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peer_port</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.connect_to_peer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.connect_to_peer" title="Permalink to this definition"></a></dt>
+<dd><p>Connect to a peer via a port number</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>peer_port</strong> (<em>int</em>) – port to connect to</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.gen_coins">
+<span class="sig-name descname"><span class="pre">gen_coins</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.gen_coins"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.gen_coins" title="Permalink to this definition"></a></dt>
+<dd><p>Generates 100 coins for the user</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.generate_keys">
+<span class="sig-name descname"><span class="pre">generate_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.generate_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.generate_keys" title="Permalink to this definition"></a></dt>
+<dd><p>Generates the keys for the node</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.handler">
+<span class="sig-name descname"><span class="pre">handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.handler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.handler" title="Permalink to this definition"></a></dt>
+<dd><p>Handles all of the messages in the system</p>
+<p>TRANSACTION - For recieving new transactions
+BLOCK- For recieving new blocks
+CHAIN - For recieving a chain
+PORT - For connecting to the new port number
+EXIT - For checking which socket has left the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c</strong> (<em>socket</em>) – new socket object</p></li>
+<li><p><strong>a</strong> (<em>list</em>) – remote address</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.listen">
+<span class="sig-name descname"><span class="pre">listen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.listen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.listen" title="Permalink to this definition"></a></dt>
+<dd><p>Listens for connections and creates new thread for each connection</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.miner">
+<span class="sig-name descname"><span class="pre">miner</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.miner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.miner" title="Permalink to this definition"></a></dt>
+<dd><p>Mining tries to create a new block when the new round begins.
+It attempts to beet the other nodes in creating a valid block.
+If it wins it will add the block to their personal chain and then send it across the p2p network</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.pub_to_addr">
+<span class="sig-name descname"><span class="pre">pub_to_addr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.pub_to_addr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.pub_to_addr" title="Permalink to this definition"></a></dt>
+<dd><p>Turns the public key into a secure public key/address</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – pub_key_str</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>public key secure</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.regenerate_keys">
+<span class="sig-name descname"><span class="pre">regenerate_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.regenerate_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.regenerate_keys" title="Permalink to this definition"></a></dt>
+<dd><p>Regenerates new keys and sends the nodes unspent transactions to the new key</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.send_message">
+<span class="sig-name descname"><span class="pre">send_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.send_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.send_message" title="Permalink to this definition"></a></dt>
+<dd><p>Sends a message to all peers and removes broken connections</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>str</em>) – message to send</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.NodeModule.Node.sock">
+<span class="sig-name descname"><span class="pre">sock</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;socket.socket</span> <span class="pre">fd=6,</span> <span class="pre">family=AddressFamily.AF_INET,</span> <span class="pre">type=SocketKind.SOCK_STREAM,</span> <span class="pre">proto=0,</span> <span class="pre">laddr=('0.0.0.0',</span> <span class="pre">0)&gt;</span></em><a class="headerlink" href="#src.NodeModule.Node.sock" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.transaction_maker">
+<span class="sig-name descname"><span class="pre">transaction_maker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transaction_to_spend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_pub_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transaction_fee</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_spend_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.transaction_maker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.transaction_maker" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a transaction, the change transaction and the fee transaction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transaction_to_spend</strong> (<em>list</em><em> of </em><a class="reference internal" href="src.TransactionModule.html#src.TransactionModule.Transaction" title="src.TransactionModule.Transaction"><em>Transaction</em></a><em> or </em><a class="reference internal" href="src.TransactionModule.html#src.TransactionModule.Transaction" title="src.TransactionModule.Transaction"><em>Transaction</em></a>) – the selected transaction(s) to send</p></li>
+<li><p><strong>script_pub_key</strong> (<em>str</em>) – script_pub_key of the transactions</p></li>
+<li><p><strong>value</strong> (<em>int</em>) – value of the new main transaction</p></li>
+<li><p><strong>transaction_fee</strong> (<em>int</em>) – the value of the transaction fee</p></li>
+<li><p><strong>to_spend_value</strong> (<em>int</em>) – sum of the values of the transactions in transaction_to_spend</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>transaction creation succesful</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.unspent_to_txt">
+<span class="sig-name descname"><span class="pre">unspent_to_txt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.unspent_to_txt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.unspent_to_txt" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a .txt file that outputs the unspent transactions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.NodeModule.Node.utxo">
+<span class="sig-name descname"><span class="pre">utxo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/NodeModule.html#Node.utxo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.NodeModule.Node.utxo" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the balance, unspent and my unspent by checking the transactions in the blockchain and transaction pool.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, George Lorimer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

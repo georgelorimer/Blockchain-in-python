@@ -1,0 +1,27 @@
+Unspent Transactions:
+------------------------------------------------------------------------------
+Transaction 1: 
+Transaction: 33a946427bf7561a3921fb04c19101b58fb7a9297f976e8e75da1910ad23ba7f
+Value: 53
+Timestamp: 2023-03-23 14:06:02.815608
+Type: COINBASE
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Inputs: 
+1.	Input Hash: COINBASE_TRANSACTION
+	Script Signature: None
+Output:
+	Script Pub Key: P2PK:36471331039549289306454693100745720270301253253307976807837479950765772978219+45367510649612700619329506489874149022024092938874218838834510848169771649076
+	Value: 53
+------------------------------------------------------------------------------
+Transaction 2: 
+Transaction: 6f933061f6d90bf9bd9d7db06f26aa3a898cae0a5b0f5803d4fa3ea93f7b46d7
+Value: 22
+Timestamp: 2023-03-23 14:05:43.107911
+Type: MAIN
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Inputs: 
+1.	Input Hash: 02a54bbe4f0fcbab0866d339e8518db107db61462649b328e91d93375d893370
+	Script Signature: b':\xf74\xf2\x1a\xbf\xa6\xc1;L\x0f\x17\xb5*\xb9!\x1a\xdbWL\xc3\x00\xce\xfd\xee\x166\xfc&B{\xac\xd2d\xd4\x03t4}\xe9\x93\xacaC\xceP\x9d\x1d\x0f\xc0wf\x87\xda\xd1\xf2\x0cg\xe5}\x16\xac\xcf\x04'
+Output:
+	Script Pub Key: P2PK:36471331039549289306454693100745720270301253253307976807837479950765772978219+45367510649612700619329506489874149022024092938874218838834510848169771649076
+	Value: 22
